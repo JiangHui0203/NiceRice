@@ -1,0 +1,185 @@
+/* 邀请好友时间协同抽屉样式 */
+.invite-preview-card {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(20, 184, 166, 0.03) 100%);
+  border: 1.5rpx solid rgba(13, 148, 136, 0.2);
+  border-radius: 20rpx;
+  padding: 22rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.invite-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 16rpx;
+}
+
+.invite-preview-avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  background: rgba(13, 148, 136, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+.invite-preview-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-preview-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 4rpx;
+}
+
+.invite-preview-name {
+  font-size: 26rpx;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.invite-preview-badge {
+  font-size: 19rpx;
+  font-weight: 750;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.12);
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+.invite-preview-count {
+  font-size: 20rpx;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.invite-preview-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 14rpx;
+}
+
+.invite-slot-pill {
+  font-size: 21rpx;
+  font-weight: 750;
+  color: #0d9488;
+  background: #ffffff;
+  border: 1rpx solid rgba(13, 148, 136, 0.25);
+  padding: 6rpx 14rpx;
+  border-radius: 12rpx;
+}
+
+.invite-preview-empty {
+  font-size: 21rpx;
+  color: #94a3b8;
+  background: #ffffff;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  text-align: center;
+  margin-bottom: 14rpx;
+}
+
+.invite-preview-tip {
+  font-size: 19rpx;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* 分享方式卡片列表 */
+.invite-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 10rpx;
+}
+
+.invite-method-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #f8fafc;
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  border-radius: 18rpx;
+  padding: 18rpx 20rpx;
+  transition: all 0.2s ease;
+}
+
+.invite-method-icon {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.invite-method-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-method-title {
+  font-size: 25rpx;
+  font-weight: 850;
+  color: #1e293b;
+  margin-bottom: 4rpx;
+}
+
+.invite-method-desc {
+  font-size: 19rpx;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.invite-method-action-btn {
+  height: 64rpx !important;
+  line-height: 62rpx !important;
+  border-radius: 32rpx !important;
+  font-size: 23rpx !important;
+  font-weight: 850 !important;
+  padding: 0 28rpx !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+.invite-method-action-btn.primary {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3rpx 10rpx rgba(13, 148, 136, 0.22) !important;
+  border: none !important;
+}
+
+.invite-method-action-btn.primary:active {
+  background: #0b7a70 !important;
+  transform: scale(0.96);
+}
+
+.invite-method-action-btn.secondary {
+  background: rgba(13, 148, 136, 0.08) !important;
+  color: #0d9488 !important;
+  border: 1rpx solid rgba(13, 148, 136, 0.22) !important;
+}
+
+.invite-method-action-btn.secondary:active {
+  background: rgba(13, 148, 136, 0.18) !important;
+  transform: scale(0.96);
+}
+
+.invite-method-action-btn.ghost {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1rpx solid rgba(0, 0, 0, 0.12) !important;
+}
+
+.invite-method-action-btn.ghost:active {
+  background: #f1f5f9 !important;
+  transform: scale(0.96);
+}
+

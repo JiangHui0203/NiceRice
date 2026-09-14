@@ -1,0 +1,129 @@
+/* ========================================================== */
+/* 已过期卡券纯粹灰调视觉美学 (全元素去色降噪规范)            */
+/* ========================================================== */
+.coupon-card.is-expired {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.02) !important;
+}
+
+.coupon-card.is-expired.theme-0 {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+.coupon-card.is-expired.theme-0::before {
+  background: #94a3b8 !important; /* 单数张纯色淡灰条带 */
+}
+
+.coupon-card.is-expired.theme-1 {
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+}
+.coupon-card.is-expired.theme-1::before {
+  background: rgba(148, 163, 184, 0.5) !important; /* 双数张50%透明度淡灰条带 */
+}
+
+/* 标题与分类 */
+.coupon-card.is-expired .coupon-title {
+  color: #475569 !important;
+}
+.coupon-card.is-expired .platform-name,
+.coupon-card.is-expired .coupon-type {
+  color: #94a3b8 !important;
+}
+
+/* 门店与距离 (去除绿色) */
+.coupon-card.is-expired .coupon-venue {
+  color: #94a3b8 !important;
+}
+.coupon-card.is-expired .venue-dist {
+  color: #94a3b8 !important;
+}
+.coupon-card.is-expired .venue-arrow {
+  border-color: #cbd5e1 !important;
+}
+
+/* 价格与折扣 (去除绿色与金色) */
+.coupon-card.is-expired .price-symbol {
+  color: #64748b !important;
+}
+.coupon-card.is-expired .coupon-price {
+  color: #64748b !important;
+}
+.coupon-card.is-expired .original-price-strikethrough {
+  color: #cbd5e1 !important;
+}
+.coupon-card.is-expired .discount-pill {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1rpx solid #e2e8f0 !important;
+}
+.coupon-card.is-expired .coupon-state,
+.coupon-card.is-expired .coupon-state.expired {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 1rpx solid #e2e8f0 !important;
+}
+
+/* 进度条与倒计时 */
+.coupon-card.is-expired .validity-clock-icon {
+  filter: grayscale(100%) opacity(50%) !important;
+}
+.coupon-card.is-expired .expiry-progress-container {
+  background: #f1f5f9 !important;
+}
+.coupon-card.is-expired .expiry-progress-fill {
+  background-color: #cbd5e1 !important;
+}
+.coupon-card.is-expired .validity-countdown-text {
+  color: #94a3b8 !important;
+}
+
+/* 标签与适合度胶囊 (去除绿色/高亮色) */
+.coupon-card.is-expired .rule-pill {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
+}
+.coupon-card.is-expired .rule-pill.highlight {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+}
+.coupon-card.is-expired .card-expand-chevron {
+  border-color: #cbd5e1 !important;
+}
+
+/* 展开区域指标 */
+.coupon-card.is-expired .deal-metrics .metric {
+  background: #f8fafc !important;
+}
+.coupon-card.is-expired .deal-metrics .metric-value {
+  color: #64748b !important;
+}
+.coupon-card.is-expired .deal-metrics .metric-label {
+  color: #94a3b8 !important;
+}
+.coupon-card.is-expired .expanded-address-row,
+.coupon-card.is-expired .address-text,
+.coupon-card.is-expired .time-text {
+  color: #94a3b8 !important;
+}
+
+/* 已使用券保留在独立历史筛选中，使用中性完成态，不再伪装成过期券。 */
+.coupon-card.is-used {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-color: rgba(100, 116, 139, 0.18) !important;
+}
+
+.coupon-card.is-used::before {
+  background: #94a3b8 !important;
+}
+
+.coupon-card.is-used .coupon-state.used {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.coupon-card.is-used .coupon-title,
+.coupon-card.is-used .coupon-price {
+  color: #475569 !important;
+}

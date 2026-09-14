@@ -1,0 +1,220 @@
+<view class="page debug-page">
+  <view class="page-header">
+    <view class="eyebrow">🛠️ DEVELOPER TOOLS</view>
+    <view class="page-title">开发者选项</view>
+    <view class="page-subtitle">气象模拟实验室、和风 API 诊断、推荐算法与存储管理</view>
+  </view>
+
+  <!-- 顶部三段式分栏切换 -->
+  <view class="segmented-control-wrap">
+    <view class="segmented-control">
+      <view class="segmented-item {{activeTab === 'weather' ? 'active' : ''}}" bindtap="switchTab" data-tab="weather">
+        ⛅ 气象实验室
+      </view>
+      <view class="segmented-item {{activeTab === 'algo' ? 'active' : ''}}" bindtap="switchTab" data-tab="algo">
+        🧪 推荐算法
+      </view>
+      <view class="segmented-item {{activeTab === 'system' ? 'active' : ''}}" bindtap="switchTab" data-tab="system">
+        💾 存储与日志
+      </view>
+    </view>
+  </view>
+
+  <!-- ================= Tab 1: ⛅ 气象实验室 ================= -->
+  <block wx:if="{{activeTab === 'weather'}}">
+    <!-- 1.1 模拟天气控制 -->
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">模拟天气控制台</view>
+        <view class="tag {{isMockWeather ? 'orange' : 'green'}} compact">
+          {{isMockWeather ? '模拟覆盖中' : (hasApiKey ? '和风实况联动' : '本地自适应')}}
+        </view>
+      </view>
+
+      <view class="card debug-card">
+        <!-- 模拟总开关 -->
+        <view class="setting-switch-row">
+          <view class="switch-copy">
+            <view class="switch-title">模拟天气总开关</view>
+            <view class="switch-desc">{{isMockWeather ? '已开启手动指定场景' : '已关闭（使用和风天气实况）'}}</view>
+          </view>
+          <switch checked="{{isMockWeather}}" color="#0f766e" bindchange="toggleMockWeather" />
+        </view>
+
+        <!-- 当前生效天气状态展示条 -->
+        <view class="weather-preview-bar">
+          <view class="weather-preview-icon">{{currentWeather.icon || '▫️'}}</view>
+          <view class="weather-preview-info">
+            <view class="weather-preview-title">{{currentWeather.condition || '天气待更新'}} · {{currentWeather.temperatureRange || '--'}}</view>
+            <view class="weather-preview-desc">{{currentWeather.summary || currentWeather.desc || '暂无天气摘要'}} ({{currentWeather.windLevel !== undefined && currentWeather.windLevel !== null ? ('风力' + currentWeather.windLevel + '级 · ') : ''}}{{currentWeather.source === 'manual' ? '手动模拟' : (currentWeather.source === 'api' ? '和风实况' : '本地样例')}})</view>
+          </view>
+          <view class="weather-preview-time">{{currentWeather.updatedAt || '刚刚'}}</view>
+        </view>
+
+        <!-- 模拟天气选择面板 (仅开启时展示) -->
+        <block wx:if="{{isMockWeather}}">
+          <view class="sim-panel-divider"></view>
+
+          <view class="sub-label">选择天气大类：</view>
+          <scroll-view scroll-x class="weather-category-tabs" enable-flex="true">
+            <view
+              wx:for="{{categories}}"
+              wx:key="id"
+              class="category-tab-btn {{activeCategory === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              bindtap="selectCategory"
+            >{{item.name}}</view>
+          </scroll-view>
+
+          <view class="sub-label" style="margin-top: 16rpx;">选择具体气象场景：</view>
+          <view class="weather-chip-grid">
+            <view
+              class="weather-chip {{currentWeather.key === item.value ? 'active' : ''}}"
+              wx:for="{{activeSubWeathers}}"
+              wx:key="value"
+              data-value="{{item.value}}"
+              bindtap="selectSubWeather"
+            >{{item.label}}</view>
+          </view>
+
+          <view class="sim-panel-actions">
+            <button class="btn btn-secondary btn-sm" bindtap="restoreLiveWeather">恢复实时和风天气</button>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 1.2 和风 API 联调诊断 -->
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">和风天气 API 联调诊断</view>
+      </view>
+
+      <view class="card debug-card">
+        <view class="config-row">
+          <text class="config-label">专属 Host：</text>
+          <input
+            class="config-input"
+            value="{{apiHostDraft}}"
+            placeholder="例如 abc123.def.qweatherapi.com"
+            bindinput="onHostInput"
+            maxlength="253"
+          />
+        </view>
+
+        <view class="config-row">
+          <text class="config-label">API Key：</text>
+          <input
+            class="config-input"
+            password="true"
+            value="{{apiKeyDraft}}"
+            placeholder="{{hasApiKey ? ('已保存 ' + maskedApiKey + '，留空保持不变') : '输入 API KEY'}}"
+            bindinput="onApiKeyInput"
+            maxlength="512"
+          />
+        </view>
+
+        <view class="setting-switch-row api-consent-row">
+          <view class="switch-copy">
+            <view class="switch-title">允许本机直连天气 API</view>
+            <view class="switch-desc">仅发送所选起点的经纬度，不启用云存储</view>
+          </view>
+          <switch checked="{{directWeatherApiEnabled}}" color="#0f766e" bindchange="onDirectWeatherApiChange" />
+        </view>
+
+        <view class="config-tip">
+          凭据使用本机加密存储，不写入源码或备份。这里仅用于开发联调；发布时仍需配置 request 合法域名，并建议改由后端签发短期 JWT。
+        </view>
+
+        <view class="btn-group-row">
+          <button class="btn btn-secondary btn-sm" bindtap="saveWeatherApiSettings">💾 保存本机配置</button>
+          <button class="btn btn-primary btn-sm" loading="{{isTestingApi}}" bindtap="runApiTest">⚡ 测试 API 连通性</button>
+          <button class="btn btn-secondary btn-sm" bindtap="clearWeatherCache">🧹 清空天气缓存</button>
+        </view>
+
+        <!-- 诊断结果卡片 -->
+        <view class="diag-result-card {{apiTestResult.success ? 'pass' : 'fail'}}" wx:if="{{apiTestResult}}">
+          <view class="diag-header">
+            <text class="diag-title">{{apiTestResult.success ? '✅ API 联调成功' : '❌ API 联调未通过'}}</text>
+            <text class="diag-status">HTTP {{apiTestResult.statusCode || 0}}</text>
+          </view>
+          <view class="diag-body">{{apiTestResult.message}}</view>
+          <view class="diag-detail" wx:if="{{apiTestResult.now}}">
+            实况数据：{{apiTestResult.now.text}} · {{apiTestResult.now.temp}}°C · 体感 {{apiTestResult.now.feelsLike}}°C · 风速 {{apiTestResult.now.windSpeed}}km/h
+          </view>
+          <view class="diag-detail" wx:if="{{apiTestResult.forecastDays}}">
+            预报状态：已同步未来 {{apiTestResult.forecastDays}} 天气象预测（已深度注入本周计划）
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- ================= Tab 2: 🧪 推荐算法 ================= -->
+  <block wx:if="{{activeTab === 'algo'}}">
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">推荐算法回归测试</view>
+        <view class="section-action">Schema {{schemaVersion}}</view>
+      </view>
+      <view class="test-list">
+        <view class="test-card card" wx:for="{{testResults}}" wx:key="couponId">
+          <view class="test-head">
+            <view class="test-title">{{item.title}}</view>
+            <view class="test-status {{item.pass ? 'pass' : 'fail'}}">{{item.pass ? '通过' : '检查'}}</view>
+          </view>
+          <view class="test-meta">{{item.level}} · {{item.score}} · {{item.statusLabel}}</view>
+          <view class="test-desc">{{item.firstBlocker || item.firstWarning || item.firstReason}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">订阅消息模板</view>
+        <view class="section-action">{{templateSummary}}</view>
+      </view>
+      <view class="template-card card">
+        <view class="template-row" wx:for="{{templateFields}}" wx:key="key">
+          <view class="template-label">{{item.label}}</view>
+          <input
+            class="template-input"
+            placeholder="{{item.placeholder}}"
+            value="{{item.value}}"
+            data-key="{{item.key}}"
+            bindinput="onTemplateInput"
+          />
+        </view>
+        <view class="template-actions">
+          <button class="template-btn secondary" bindtap="clearTemplateIds">清空</button>
+          <button class="template-btn primary" bindtap="saveTemplateIds">保存</button>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- ================= Tab 3: 💾 存储与日志 ================= -->
+  <block wx:if="{{activeTab === 'system'}}">
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">系统行为与推荐日志</view>
+        <view class="section-action" bindtap="clearLogs">清空日志</view>
+      </view>
+      <view class="log-card card">
+        <view class="log-row" wx:if="{{!eventLogs.length && !recommendationLogs.length}}">暂无日志记录</view>
+        <view class="log-row" wx:for="{{eventLogs}}" wx:key="id">【行为】{{item.createdAt}} · {{item.type}}</view>
+        <view class="log-row" wx:for="{{recommendationLogs}}" wx:key="id">【推荐】{{item.createdAt}} · {{item.couponId}} · 得分:{{item.score}}</view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">存储管理与灾备重置</view>
+      </view>
+      <view class="card debug-card" style="gap: 16rpx;">
+        <button class="btn btn-secondary" style="width: 100%;" bindtap="resetData">重置为初始原型示例数据</button>
+        <button class="btn btn-ghost" style="width: 100%; color: #dc2626; border-color: rgba(220,38,38,0.25);" bindtap="clearAllStorage">清空所有 LocalStorage 缓存</button>
+      </view>
+    </view>
+  </block>
+</view>

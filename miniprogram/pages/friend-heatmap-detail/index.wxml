@@ -1,0 +1,242 @@
+<view class="container">
+  <!-- 1. Header Card -->
+  <view class="detail-header-card">
+    <view class="detail-title-row">
+      <text class="detail-main-title">📊 {{day}} · {{scene}}</text>
+      <text class="detail-time-badge">{{timeRange}}</text>
+    </view>
+    <view class="detail-summary-text">
+      已勾选协同的成员中，有 <text class="highlight-count">{{availableFriendsCount}}</text> 人此时间有空
+    </view>
+  </view>
+
+  <scroll-view class="content-scroll" scroll-y="true">
+    <!-- 2. Friend list card -->
+    <view class="card details-card">
+      <view class="details-title">👥 好友空档状况</view>
+      <view class="details-list">
+        <view class="detail-row" wx:for="{{friendStatus}}" wx:key="name">
+          <view class="detail-friend-left">
+            <text class="status-indicator {{item.isAvailable ? 'available' : 'busy'}}">{{item.isAvailable ? '✓' : '✗'}}</text>
+            <text class="detail-friend-name">{{item.name}}</text>
+          </view>
+          <text class="detail-friend-desc">{{item.isAvailable ? (item.slotDetail || '有空档') : '此时间不可约'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 3. Activity Intent Voting Card -->
+    <view class="section-head" style="margin-top: 30rpx;">
+      <view class="section-title">🗳️ 本时段聚会活动意向投票</view>
+      <view class="section-action" wx:if="{{activeSlotVotes}}" bindtap="clearVotes">清空投票</view>
+    </view>
+
+    <!-- State 1: Vote not initiated -->
+    <view class="card empty-votes-card" wx:if="{{!activeSlotVotes}}" bindtap="initVoteForActiveSlot">
+      <view class="empty-icon">🗳️</view>
+      <view class="empty-text">大家在这个时间想干什么？</view>
+      <view class="empty-tip">点击一键发起活动意向与吃啥投票，让好友共同参与投票决策！</view>
+      <button class="btn btn-primary" style="margin-top: 24rpx; width: 260rpx !important; min-height: 0 !important; font-size: 24rpx; padding: 14rpx 0;">发起意向投票</button>
+    </view>
+
+    <!-- State 2: Vote is active -->
+    <view class="card votes-card" wx:else>
+      <view class="vote-options-list">
+        <view class="vote-option-row" wx:for="{{activeSlotVotes.options}}" wx:key="id" bindtap="toggleVoteOption" data-opt-id="{{item.id}}">
+          <!-- Left checkbox dot -->
+          <view class="vote-checkbox {{item.hasVoted ? 'checked' : ''}}"></view>
+          
+          <!-- Option body -->
+          <view class="vote-option-body">
+            <view class="vote-option-header">
+              <text class="vote-option-name">{{item.name}}</text>
+              <text class="vote-count-text">{{item.votes.length}} 票</text>
+            </view>
+            
+            <!-- Progress bar -->
+            <view class="vote-progress-bg">
+              <view class="vote-progress-fill" style="width: {{totalVotersCount > 0 ? (item.votes.length / totalVotersCount * 100) : 0}}%;"></view>
+            </view>
+            
+            <!-- Voter names list -->
+            <view class="vote-voters" wx:if="{{item.votes.length > 0}}">
+              投选人: <text style="font-weight: 800; color: #475569;">{{item.voterNamesStr}}</text>
+            </view>
+          </view>
+          
+          <!-- Delete button -->
+          <view class="vote-option-delete" catchtap="deleteVoteOption" data-opt-id="{{item.id}}">✕</view>
+        </view>
+      </view>
+
+      <!-- Add new option input row -->
+      <view class="vote-add-row" catchtap="stopPropagation">
+        <input 
+          class="vote-input" 
+          placeholder="添加自定义美食/活动选项..." 
+          value="{{newVoteOptionName}}"
+          bindinput="onVoteInput"
+          maxlength="40"
+          confirm-type="done"
+          bindconfirm="addVoteOption"
+        />
+        <button class="vote-add-btn" bindtap="addVoteOption">添加</button>
+      </view>
+    </view>
+
+    <!-- 3.5 Meal Planning and Notes -->
+    <view class="section-head" style="margin-top: 30rpx;">
+      <view class="section-title">🍽️ 套餐菜品与点单备忘</view>
+    </view>
+    <view class="card meal-plan-card">
+      <view class="meal-dishes-section" wx:if="{{selectedCoupon && selectedCoupon.dishes}}">
+        <view class="meal-dishes-label">📋 已选券包含菜品</view>
+        <view class="meal-dishes-content">{{selectedCoupon.dishes}}</view>
+      </view>
+      <view class="meal-dishes-section" wx:elif="{{winningActivity}}">
+        <view class="meal-dishes-label">🎯 投票胜出活动</view>
+        <view class="meal-dishes-content">{{winningActivity}}</view>
+      </view>
+      <view class="meal-note-section">
+        <view class="meal-note-label">📝 聚餐备忘与点单提醒</view>
+        <textarea class="meal-note-textarea" placeholder="记下聚餐的个人备忘，例如：&#10;· 小王不吃辣，点鸳鸯锅&#10;· 推荐必点黑猪五花肉和南瓜粥&#10;· 靠窗景观位提前电话预留" value="{{planNote}}" bindinput="onPlanNoteInput" maxlength="300" auto-height="true" />
+      </view>
+      <view class="meal-pills-row">
+        <view class="meal-pills-label">常用备忘：</view>
+        <scroll-view class="meal-pills-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="meal-pill" wx:for="{{mealNotePills}}" wx:key="*this" data-text="{{item}}" bindtap="appendMealPill">
+            <text>+ {{item}}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 4. Recommended Coupons Card -->
+    <view class="section-head" style="margin-top: 35rpx;">
+      <view class="section-title">🎫 适合此时段的聚会优惠券</view>
+    </view>
+    
+    <view wx:if="{{recommendedCoupons.length > 0}}" class="coupons-list" style="margin-bottom: 120rpx;">
+      <view 
+        class="coupon-card card" 
+        wx:for="{{recommendedCoupons}}" 
+        wx:key="id"
+        bindtap="goCouponDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="coupon-left">
+          <view class="coupon-title-row">
+            <text class="coupon-badge {{item.stateClass}}">{{item.state}}</text>
+            <text class="coupon-title">{{item.title}}</text>
+          </view>
+          <view class="coupon-merchant">{{item.merchantName}} · 适合{{item.people}}</view>
+          <view class="coupon-expiry">{{item.expiresIn}} · {{item.travelTime ? '路程约' + item.travelTime : '未估算路程'}}</view>
+        </view>
+        <view class="coupon-right">
+          <view class="coupon-price-col">
+            <text class="price-val" wx:if="{{item.price}}">¥{{item.price}}</text>
+            <text class="price-original" wx:if="{{item.originalPrice}}">¥{{item.originalPrice}}</text>
+          </view>
+          <button class="btn-create-plan" catchtap="openExportDrawerWithCoupon" data-id="{{item.id}}">安排</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-coupons-card card" style="margin-bottom: 120rpx;">
+      <view class="empty-icon">🍽️</view>
+      <view class="empty-text">券包里没有匹配该时段的优惠券</view>
+      <view class="empty-tip">可以直接在此时间发起出行计划，或去录入一张新券。</view>
+      <button class="btn btn-primary" bindtap="openExportDrawer" style="margin-top: 20rpx;">发起自定义计划</button>
+    </view>
+  </scroll-view>
+
+  <!-- 5. Bottom Action Bar -->
+  <view class="bottom-action-bar">
+    <button class="btn-finalize" bindtap="openExportDrawer">📋 确定方案并生成计划单</button>
+  </view>
+
+  <!-- 6. Half Screen Export Drawer -->
+  <view class="drawer-mask {{showExportDrawer ? 'show' : ''}}" bindtap="closeExportDrawer">
+    <view class="drawer-container" catchtap="stopPropagation" style="{{exportDragY ? 'transform: translateY(' + exportDragY + 'px);' : ''}}">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onExportTouchStart" bindtouchmove="onExportTouchMove" bindtouchend="onExportTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header" bindtouchstart="onExportTouchStart" bindtouchmove="onExportTouchMove" bindtouchend="onExportTouchEnd">
+        <text class="drawer-title">📋 聚会计划导出设置</text>
+        <view class="drawer-close" bindtap="closeExportDrawer">取消</view>
+      </view>
+      <scroll-view class="drawer-content" scroll-y="true" style="max-height: 50vh;">
+        <view class="export-preview-card">
+          <view class="preview-item">
+            <text class="preview-label">时间：</text>
+            <text class="preview-val">{{targetDate}} ({{day}}) · {{scene}}</text>
+          </view>
+          <view class="preview-item">
+            <text class="preview-label">活动：</text>
+            <text class="preview-val">{{winningActivity || '暂未投票决定'}}</text>
+          </view>
+          <view class="preview-item" wx:if="{{selectedCoupon}}">
+            <text class="preview-label">卡券：</text>
+            <text class="preview-val">{{selectedCoupon.title}}</text>
+          </view>
+        </view>
+
+        <view class="export-checkboxes-title">勾选要导出的内容</view>
+        <view class="export-checkbox-list">
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeTime">
+            <view class="export-checkbox-box {{exportChecks.includeTime ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含时间段</text>
+              <text class="export-check-desc">包含具体日历日期与时段（{{targetDate}} {{timeRange}}）</text>
+            </view>
+          </view>
+
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeActivity">
+            <view class="export-checkbox-box {{exportChecks.includeActivity ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含活动内容</text>
+              <text class="export-check-desc">包含投选第一顺位的活动/美食方案</text>
+            </view>
+          </view>
+
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeFriends">
+            <view class="export-checkbox-box {{exportChecks.includeFriends ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含有空成员</text>
+              <text class="export-check-desc">列出当前有空出席的全部好友名单</text>
+            </view>
+          </view>
+
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeCoupon" wx:if="{{selectedCoupon}}">
+            <view class="export-checkbox-box {{exportChecks.includeCoupon ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含适用优惠券</text>
+              <text class="export-check-desc">绑定已选的优惠券，写入系统后自动置为“已安排”</text>
+            </view>
+          </view>
+
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeDishes" wx:if="{{selectedCoupon && selectedCoupon.dishes}}">
+            <view class="export-checkbox-box {{exportChecks.includeDishes ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含套餐菜品明细</text>
+              <text class="export-check-desc">附带优惠券包含的菜品列表</text>
+            </view>
+          </view>
+
+          <view class="export-checkbox-row" bindtap="toggleExportCheck" data-key="includeNote" wx:if="{{planNote}}">
+            <view class="export-checkbox-box {{exportChecks.includeNote ? 'checked' : ''}}"></view>
+            <view class="export-checkbox-label">
+              <text class="export-check-name">包含聚餐备忘</text>
+              <text class="export-check-desc">附带你的点单提醒与个人备忘</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      
+      <view class="drawer-footer-actions">
+        <button class="drawer-btn drawer-btn-secondary" bindtap="copyInviteText">💬 复制群邀请文案</button>
+        <button class="drawer-btn drawer-btn-primary" bindtap="saveToMyPlans">💾 写入我的日程计划</button>
+      </view>
+    </view>
+  </view>
+</view>

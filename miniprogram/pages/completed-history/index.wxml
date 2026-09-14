@@ -1,0 +1,119 @@
+<view class="page completed-history-page" style="padding: 32rpx; box-sizing: border-box; background-color: var(--bg-color); min-height: 100vh;">
+  <view class="page-header" style="margin-bottom: 32rpx;">
+    <view class="page-title" style="font-size: 40rpx; font-weight: 800; color: var(--text-primary);">履约足迹与账本</view>
+    <view class="page-subtitle" style="font-size: 24rpx; color: var(--text-secondary); margin-top: 4rpx;">回顾你的每一次优质安排与真实省钱统计</view>
+  </view>
+
+  <!-- iOS 拟真统计卡片组 -->
+  <view class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16rpx; margin-bottom: 32rpx;">
+    <view class="stats-card card" style="text-align: center; padding: 22rpx 16rpx;">
+      <view class="stats-value" style="font-size: 38rpx; font-weight: 700; color: var(--primary-color);">{{stats.count}}<text style="font-size: 22rpx; font-weight: normal; margin-left: 2rpx;">次</text></view>
+      <view class="stats-label" style="font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx;">累计履约</view>
+    </view>
+    <view class="stats-card card" style="text-align: center; padding: 22rpx 16rpx;">
+      <view class="stats-value" style="font-size: 38rpx; font-weight: 700; color: #16a34a;">
+        <text style="font-size: 22rpx; font-weight: 700;">¥</text>{{stats.totalSaved}}
+        <text class="tag green compact" wx:if="{{stats.avgDiscount}}" style="font-size: 18rpx; margin-left: 6rpx; vertical-align: middle;">{{stats.avgDiscount}}</text>
+      </view>
+      <view class="stats-label" style="font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx;">累计已省</view>
+    </view>
+    <view class="stats-card card" style="text-align: center; padding: 22rpx 16rpx;">
+      <view class="stats-value" style="font-size: 38rpx; font-weight: 700; color: #0284c7;"><text style="font-size: 22rpx; font-weight: 700;">¥</text>{{stats.totalCost}}</view>
+      <view class="stats-label" style="font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx;">累计实付</view>
+    </view>
+    <view class="stats-card card" style="text-align: center; padding: 22rpx 16rpx;">
+      <view class="stats-value" style="font-size: 34rpx; font-weight: 700; color: #f59e0b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        {{stats.topFriend !== '无' ? stats.topFriend : stats.favoriteCategory}}
+      </view>
+      <view class="stats-label" style="font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx;">
+        {{stats.topFriend !== '无' ? '默契饭搭子' : '最常吃品类'}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 成就勋章墙 -->
+  <view class="badges-card card" wx:if="{{badges && badges.length}}" style="padding: 24rpx; margin-bottom: 32rpx; background: #ffffff; border-radius: 20rpx;">
+    <view style="font-size: 26rpx; font-weight: 800; color: var(--text-primary); margin-bottom: 16rpx; display: flex; align-items: center; justify-content: space-between;">
+      <view style="display: flex; align-items: center; gap: 8rpx;">
+        <text>🎖️</text>
+        <text>我的履约成就勋章</text>
+      </view>
+      <view style="font-size: 20rpx; color: var(--primary-color); font-weight: 700;">解锁荣誉</view>
+    </view>
+    <view style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12rpx; text-align: center;">
+      <view wx:for="{{badges}}" wx:key="id" style="display: flex; flex-direction: column; align-items: center; gap: 6rpx; opacity: {{item.unlocked ? '1' : '0.45'}};">
+        <view style="font-size: 38rpx; width: 80rpx; height: 80rpx; border-radius: 50%; background: {{item.unlocked ? 'rgba(13, 148, 136, 0.1)' : 'rgba(0,0,0,0.04)'}}; display: flex; align-items: center; justify-content: center;">{{item.icon}}</view>
+        <view style="font-size: 21rpx; font-weight: 800; color: {{item.unlocked ? 'var(--text-primary)' : 'var(--text-muted)'}};">{{item.title}}</view>
+        <view style="font-size: 17rpx; color: var(--text-secondary); line-height: 1.2;">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!months.length}}" class="empty-card card" style="text-align: center; padding: 80rpx 40rpx; border-radius: 20rpx; margin-top: 60rpx;">
+    <view style="font-size: 48rpx; margin-bottom: 20rpx;">🍽️</view>
+    <view style="font-size: 28rpx; color: var(--text-primary); font-weight: bold; margin-bottom: 10rpx;">暂无履约记录</view>
+    <view style="font-size: 24rpx; color: var(--text-secondary); line-height: 1.4;">将进行中的计划标记为“完成”，系统会自动记录省钱账本与足迹哦！</view>
+  </view>
+
+  <!-- 月份分组历史时间轴 -->
+  <block wx:else>
+    <view class="month-section" wx:for="{{months}}" wx:for-index="monthIndex" wx:key="label" style="margin-bottom: 36rpx;">
+      <view class="month-title" style="font-size: 28rpx; font-weight: 700; color: var(--text-primary); margin-bottom: 16rpx; padding-left: 8rpx; display: flex; align-items: center; gap: 8rpx;">
+        <text style="color: var(--primary-color);">📅</text> {{item.label}}
+      </view>
+
+      <view class="ios-list-group">
+        <view class="ios-cell" wx:for="{{item.plans}}" wx:for-item="plan" wx:for-index="planIndex" wx:key="id" bindtap="goPlanDetail" data-id="{{plan.id}}" data-coupon-id="{{plan.couponId}}" style="padding: 24rpx 28rpx; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12rpx; border-radius: 16rpx; background: rgba(255,255,255,0.85);">
+          <view class="ios-cell-left" style="display: flex; flex-direction: column; gap: 6rpx; flex: 1; min-width: 0;">
+            <!-- 标题与标签行 -->
+            <view class="plan-title-row" style="display: flex; align-items: center; gap: 10rpx; flex-wrap: wrap;">
+              <view class="plan-title" style="font-size: 28rpx; font-weight: 700; color: var(--text-primary); max-width: 380rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{plan.title}}</view>
+              <view class="tag green compact" style="font-size: 18rpx; padding: 2rpx 8rpx;">已完成</view>
+              <view class="tag compact" wx:if="{{plan.saved > 0}}" style="font-size: 18rpx; padding: 2rpx 8rpx; background: #ecfdf5; color: #059669; border: 1rpx solid #a7f3d0;">省 ¥{{plan.saved}}</view>
+            </view>
+
+            <!-- 地点与时间 -->
+            <view class="plan-meta-row" style="font-size: 22rpx; color: var(--text-secondary); display: flex; align-items: center; gap: 12rpx; flex-wrap: wrap; margin-top: 2rpx;">
+              <text>🕒 {{plan.date}} {{plan.time}}</text>
+              <text wx:if="{{plan.venue}}">📍 {{plan.venue}}</text>
+              <text wx:if="{{plan.participants && plan.participants !== '我'}}">👥 {{plan.participants}}</text>
+            </view>
+
+            <!-- 用户体验评价反馈沉淀 -->
+            <view class="plan-feedback-box" wx:if="{{plan.hasFeedback}}" style="margin-top: 6rpx; background: rgba(245, 158, 11, 0.08); padding: 8rpx 14rpx; border-radius: 8rpx; display: flex; flex-direction: column; gap: 2rpx;">
+              <view style="font-size: 20rpx; color: #d97706; font-weight: bold;">
+                {{plan.feedbackRatingStars}} <text style="font-size: 20rpx; color: var(--text-secondary); font-weight: normal; margin-left: 6rpx;">{{plan.feedbackRating}}分</text>
+              </view>
+              <view wx:if="{{plan.feedbackComment}}" style="font-size: 20rpx; color: var(--text-secondary); line-height: 1.3;">
+                {{plan.feedbackComment}}
+              </view>
+            </view>
+
+            <!-- 备注 -->
+            <view class="plan-note-meta" wx:elif="{{plan.note}}" style="font-size: 20rpx; color: var(--text-muted); background: rgba(0,0,0,0.02); padding: 6rpx 10rpx; border-radius: 6rpx; margin-top: 4rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📝 {{plan.note}}
+            </view>
+          </view>
+
+          <!-- 右侧金额与再来一顿 -->
+          <view class="ios-cell-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8rpx; flex-shrink: 0; margin-left: 16rpx; margin-top: 4rpx;">
+            <view class="plan-price" style="font-size: 30rpx; font-weight: 800; color: var(--text-primary);">
+              ¥{{plan.price}}
+            </view>
+            <view class="plan-orig-price" wx:if="{{plan.originalPrice > plan.price}}" style="font-size: 20rpx; color: var(--text-muted); text-decoration: line-through;">
+              ¥{{plan.originalPrice}}
+            </view>
+            <view class="replan-btn" catchtap="rePlan" data-month-index="{{monthIndex}}" data-plan-index="{{planIndex}}" style="font-size: 20rpx; color: var(--primary-color); background: rgba(58, 175, 169, 0.1); padding: 4rpx 12rpx; border-radius: 8rpx; font-weight: 700; margin-top: 4rpx;">
+              🔄 再来一顿
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{historyPageCount > 1}}" style="display: flex; align-items: center; justify-content: center; gap: 16rpx; margin: 8rpx 0 36rpx;">
+      <button class="btn btn-secondary" bindtap="showPreviousHistoryPage" disabled="{{!hasPreviousHistory}}" style="margin: 0; min-width: 150rpx;">上一页</button>
+      <view style="font-size: 22rpx; color: var(--text-secondary); white-space: nowrap;">{{historyRangeStart}}-{{historyRangeEnd}} / {{totalRecordCount}}</view>
+      <button class="btn btn-secondary" bindtap="showNextHistoryPage" disabled="{{!hasMoreHistory}}" style="margin: 0; min-width: 150rpx;">下一页</button>
+    </view>
+  </block>
+</view>

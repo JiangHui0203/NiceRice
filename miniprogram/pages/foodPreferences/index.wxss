@@ -1,0 +1,211 @@
+.food-pref-page {
+  padding-bottom: 150rpx;
+}
+
+.summary-grid {
+  display: flex;
+  gap: 18rpx;
+}
+
+.summary-card {
+  border-radius: 18rpx;
+  flex: 1;
+  min-height: 160rpx;
+  padding: 22rpx;
+}
+
+.summary-card.like {
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-light) 100%);
+}
+
+.summary-card.dislike {
+  background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
+}
+
+.summary-title {
+  color: #1f2933;
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.35;
+  margin-bottom: 16rpx;
+}
+
+.summary-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.food-chip {
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1;
+  padding: 10rpx 13rpx;
+}
+
+.food-chip.like {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.food-chip.dislike {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.empty-text {
+  color: #9a9287;
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.custom-card {
+  padding: 22rpx;
+}
+
+.mode-row {
+  display: flex;
+  gap: 12rpx;
+}
+
+.mode-pill,
+.option-pill {
+  background: #f3f5f3;
+  border-radius: 999rpx;
+  color: #475467;
+  font-size: 23rpx;
+  font-weight: 900;
+  line-height: 1;
+  padding: 14rpx 18rpx;
+}
+
+.mode-pill.active.like,
+.option-pill.active.like {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.mode-pill.active.dislike,
+.option-pill.active.dislike {
+  background: #e25c5c;
+  color: #ffffff;
+}
+
+.custom-row {
+  align-items: center;
+  display: flex;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.custom-input {
+  background: #f8fbfa;
+  border: 1rpx solid rgba(62, 55, 45, 0.08);
+  border-radius: 14rpx;
+  color: #1f2933;
+  flex: 1;
+  font-size: 26rpx;
+  height: 78rpx;
+  padding: 0 18rpx;
+}
+
+.custom-btn {
+  background: var(--primary-color);
+  border-radius: 14rpx;
+  color: #ffffff;
+  flex-shrink: 0;
+  font-size: 25rpx;
+  font-weight: 900;
+  height: 78rpx;
+  line-height: 78rpx;
+  margin: 0;
+  padding: 0 26rpx;
+}
+
+.custom-btn::after {
+  border: 0;
+}
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.option-row {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  min-height: 84rpx;
+  padding: 14rpx 16rpx 14rpx 22rpx;
+}
+
+.option-name {
+  color: #403a32;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.option-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10rpx;
+}
+
+.option-pill.like {
+  background: rgba(220, 252, 231, 0.72);
+  color: #15803d;
+}
+
+.option-pill.dislike {
+  background: rgba(254, 226, 226, 0.78);
+  color: #dc2626;
+}
+
+.bottom-actions {
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid rgba(74, 62, 46, 0.08);
+  bottom: 0;
+  box-sizing: border-box;
+  display: flex;
+  gap: 18rpx;
+  left: 0;
+  padding: 18rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
+  position: fixed;
+  right: 0;
+}
+
+.action-btn {
+  border-radius: 14rpx;
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 900;
+  height: 84rpx;
+  line-height: 84rpx;
+  margin: 0;
+  padding: 0;
+}
+
+.action-btn::after {
+  border: 0;
+}
+
+.action-btn.secondary {
+  background: #eef4f1;
+  color: #475467;
+}
+
+.action-btn.primary {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.option-pill:active, .mode-pill:active, .custom-btn:active, .action-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+  transition: var(--transition-normal);
+}

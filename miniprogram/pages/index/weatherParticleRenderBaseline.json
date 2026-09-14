@@ -1,0 +1,877 @@
+{
+  "version": 1,
+  "description": "Static drawParticles baseline captured before renderer extraction.",
+  "fixedValues": [
+    0.02,
+    0.91,
+    0.34,
+    0.67,
+    0.48,
+    0.13,
+    0.79,
+    0.56
+  ],
+  "cases": {
+    "rain": {
+      "name": "rain",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 150,
+        "y": 100,
+        "vx": 2,
+        "vy": 4,
+        "baseVy": 4,
+        "length": 20,
+        "baseLength": 20,
+        "thickness": 1.2,
+        "opacity": 0.4,
+        "type": "rain",
+        "layer": 2
+      },
+      "expectedParticle": {
+        "x": -17.2,
+        "y": -30,
+        "vx": 2,
+        "vy": 3.872,
+        "baseVy": 4,
+        "length": 24.19,
+        "baseLength": 20,
+        "thickness": 1.2,
+        "opacity": 0.4,
+        "type": "rain",
+        "layer": 2
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 3,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "strokeStyle",
+          "value": "rgba(50, 78, 108, 0.16000000000000003)"
+        },
+        {
+          "op": "set",
+          "key": "lineWidth",
+          "value": 2.1
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -17.2,
+            -30
+          ]
+        },
+        {
+          "op": "lineTo",
+          "args": [
+            -14.471519675309551,
+            -25.16
+          ]
+        },
+        {
+          "op": "stroke",
+          "args": []
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "strokeStyle",
+          "value": "rgba(255, 255, 255, 0.38)"
+        },
+        {
+          "op": "set",
+          "key": "lineWidth",
+          "value": 1.2
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -17.2,
+            -30
+          ]
+        },
+        {
+          "op": "lineTo",
+          "args": [
+            -14.471519675309551,
+            -25.16
+          ]
+        },
+        {
+          "op": "stroke",
+          "args": []
+        }
+      ]
+    },
+    "snow": {
+      "name": "snow",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 130,
+        "y": 90,
+        "vx": 0.2,
+        "vy": 1.5,
+        "radius": 2,
+        "opacity": 0.4,
+        "swingSpeed": 0.02,
+        "swingRange": 0.5,
+        "swingOffset": 1,
+        "type": "snow",
+        "layer": 2
+      },
+      "expectedParticle": {
+        "x": 2,
+        "y": -10,
+        "vx": 0.2,
+        "vy": 1.5,
+        "radius": 2,
+        "opacity": 0.4,
+        "swingSpeed": 0.02,
+        "swingRange": 0.5,
+        "swingOffset": 1,
+        "type": "snow",
+        "layer": 2
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 1,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "rgba(70, 110, 155, 0.13999999999999999)"
+        },
+        {
+          "op": "arc",
+          "args": [
+            2,
+            -10,
+            2.8,
+            0,
+            6.283185307179586
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "rgba(255, 255, 255, 0.38)"
+        },
+        {
+          "op": "arc",
+          "args": [
+            2,
+            -10,
+            2,
+            0,
+            6.283185307179586
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        }
+      ]
+    },
+    "leafPetal": {
+      "name": "leafPetal",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 130,
+        "y": 100,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "petal",
+        "angle": 0.2,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.3,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedParticle": {
+        "x": -25,
+        "y": 1.6,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "petal",
+        "angle": 0.21000000000000002,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.32,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 1,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "save",
+          "args": []
+        },
+        {
+          "op": "translate",
+          "args": [
+            -25,
+            1.6
+          ]
+        },
+        {
+          "op": "rotate",
+          "args": [
+            0.21000000000000002
+          ]
+        },
+        {
+          "op": "scale",
+          "args": [
+            1,
+            0.9492354180824408
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "#abc"
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            0,
+            4.199999999999999
+          ]
+        },
+        {
+          "op": "bezierCurveTo",
+          "args": [
+            -4.199999999999999,
+            0,
+            -4.199999999999999,
+            -4.199999999999999,
+            0,
+            -4.199999999999999
+          ]
+        },
+        {
+          "op": "bezierCurveTo",
+          "args": [
+            4.199999999999999,
+            -4.199999999999999,
+            4.199999999999999,
+            0,
+            0,
+            4.199999999999999
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        },
+        {
+          "op": "restore",
+          "args": []
+        }
+      ]
+    },
+    "leafGinkgo": {
+      "name": "leafGinkgo",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 10,
+        "y": 20,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "ginkgo",
+        "angle": 0.2,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.3,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedParticle": {
+        "x": 11.197582027617159,
+        "y": 20.20429921534942,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "ginkgo",
+        "angle": 0.21000000000000002,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.32,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 0,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "save",
+          "args": []
+        },
+        {
+          "op": "translate",
+          "args": [
+            11.197582027617159,
+            20.20429921534942
+          ]
+        },
+        {
+          "op": "rotate",
+          "args": [
+            0.21000000000000002
+          ]
+        },
+        {
+          "op": "scale",
+          "args": [
+            1,
+            0.9492354180824408
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "#abc"
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            0,
+            4.199999999999999
+          ]
+        },
+        {
+          "op": "quadraticCurveTo",
+          "args": [
+            -5.4,
+            -1.7999999999999998,
+            -3.5999999999999996,
+            -4.800000000000001
+          ]
+        },
+        {
+          "op": "quadraticCurveTo",
+          "args": [
+            0,
+            -3,
+            3.5999999999999996,
+            -4.800000000000001
+          ]
+        },
+        {
+          "op": "quadraticCurveTo",
+          "args": [
+            5.4,
+            -1.7999999999999998,
+            0,
+            4.199999999999999
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        },
+        {
+          "op": "restore",
+          "args": []
+        }
+      ]
+    },
+    "leafOval": {
+      "name": "leafOval",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 10,
+        "y": 20,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "oval",
+        "angle": 0.2,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.3,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedParticle": {
+        "x": 11.197582027617159,
+        "y": 20.20429921534942,
+        "vx": 1,
+        "vy": 0.1,
+        "size": 6,
+        "shape": "oval",
+        "angle": 0.21000000000000002,
+        "rotSpeed": 0.01,
+        "tumbleAngle": 0.32,
+        "tumbleSpeed": 0.02,
+        "phase": 0.4,
+        "color": "#abc",
+        "veinColor": "#def",
+        "type": "leaf"
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 0,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "save",
+          "args": []
+        },
+        {
+          "op": "translate",
+          "args": [
+            11.197582027617159,
+            20.20429921534942
+          ]
+        },
+        {
+          "op": "rotate",
+          "args": [
+            0.21000000000000002
+          ]
+        },
+        {
+          "op": "scale",
+          "args": [
+            1,
+            0.9492354180824408
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "#abc"
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -6,
+            0
+          ]
+        },
+        {
+          "op": "quadraticCurveTo",
+          "args": [
+            0,
+            -3.3000000000000003,
+            6,
+            0
+          ]
+        },
+        {
+          "op": "quadraticCurveTo",
+          "args": [
+            0,
+            3.3000000000000003,
+            -6,
+            0
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "strokeStyle",
+          "value": "#def"
+        },
+        {
+          "op": "set",
+          "key": "lineWidth",
+          "value": 0.8
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -4.800000000000001,
+            0
+          ]
+        },
+        {
+          "op": "lineTo",
+          "args": [
+            4.800000000000001,
+            0
+          ]
+        },
+        {
+          "op": "stroke",
+          "args": []
+        },
+        {
+          "op": "restore",
+          "args": []
+        }
+      ]
+    },
+    "silkWind": {
+      "name": "silkWind",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 200,
+        "y": 90,
+        "vx": 2,
+        "vy": 0.1,
+        "baseVx": 1.8,
+        "length": 40,
+        "thickness": 1,
+        "opacity": 0.3,
+        "gustFactor": 0.25,
+        "waveAmp": 2,
+        "phase": 0.4,
+        "type": "silkWind"
+      },
+      "expectedParticle": {
+        "x": -55,
+        "y": 1.6,
+        "vx": 1.8,
+        "vy": 0.1,
+        "baseVx": 1.8,
+        "length": 40,
+        "thickness": 1,
+        "opacity": 0.3,
+        "gustFactor": 0.25,
+        "waveAmp": 2,
+        "phase": 0.4,
+        "type": "silkWind"
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 1,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "createLinearGradient",
+          "id": "gradient_1",
+          "args": [
+            -55,
+            1.6,
+            -15,
+            1.6
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_1",
+          "args": [
+            0,
+            "rgba(255, 255, 255, 0)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_1",
+          "args": [
+            0.35,
+            "rgba(255, 255, 255, 0.105)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_1",
+          "args": [
+            0.7,
+            "rgba(255, 255, 255, 0.135)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_1",
+          "args": [
+            1,
+            "rgba(255, 255, 255, 0)"
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "strokeStyle",
+          "value": "gradient_1"
+        },
+        {
+          "op": "set",
+          "key": "lineWidth",
+          "value": 2.2
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -55,
+            1.6
+          ]
+        },
+        {
+          "op": "bezierCurveTo",
+          "args": [
+            -41,
+            -0.08604712710325901,
+            -27,
+            2.675753264083752,
+            -15,
+            1.6
+          ]
+        },
+        {
+          "op": "stroke",
+          "args": []
+        },
+        {
+          "op": "createLinearGradient",
+          "id": "gradient_2",
+          "args": [
+            -55,
+            1.6,
+            -15,
+            1.6
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_2",
+          "args": [
+            0,
+            "rgba(255, 255, 255, 0)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_2",
+          "args": [
+            0.35,
+            "rgba(255, 255, 255, 0.3)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_2",
+          "args": [
+            0.7,
+            "rgba(255, 255, 255, 0.36)"
+          ]
+        },
+        {
+          "op": "addColorStop",
+          "id": "gradient_2",
+          "args": [
+            1,
+            "rgba(255, 255, 255, 0)"
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "strokeStyle",
+          "value": "gradient_2"
+        },
+        {
+          "op": "set",
+          "key": "lineWidth",
+          "value": 1
+        },
+        {
+          "op": "moveTo",
+          "args": [
+            -55,
+            1.6
+          ]
+        },
+        {
+          "op": "bezierCurveTo",
+          "args": [
+            -41,
+            -0.08604712710325901,
+            -27,
+            2.675753264083752,
+            -15,
+            1.6
+          ]
+        },
+        {
+          "op": "stroke",
+          "args": []
+        }
+      ]
+    },
+    "airMote": {
+      "name": "airMote",
+      "width": 100,
+      "height": 80,
+      "initialWindPhase": 0.5,
+      "source": {
+        "x": 120,
+        "y": 30,
+        "vx": 0.4,
+        "vy": 0.1,
+        "radius": 1.2,
+        "opacity": 0.3,
+        "phase": 0.4,
+        "type": "airMote"
+      },
+      "expectedParticle": {
+        "x": -10,
+        "y": 1.6,
+        "vx": 0.4,
+        "vy": 0.1,
+        "radius": 1.2,
+        "opacity": 0.3,
+        "phase": 0.4,
+        "type": "airMote"
+      },
+      "expectedWindPhase": 0.5024,
+      "randomCalls": 1,
+      "trace": [
+        {
+          "op": "clearRect",
+          "args": [
+            0,
+            0,
+            100,
+            80
+          ]
+        },
+        {
+          "op": "beginPath",
+          "args": []
+        },
+        {
+          "op": "set",
+          "key": "fillStyle",
+          "value": "rgba(255, 255, 255, 0.2983505060138949)"
+        },
+        {
+          "op": "arc",
+          "args": [
+            -10,
+            1.6,
+            1.2,
+            0,
+            6.283185307179586
+          ]
+        },
+        {
+          "op": "fill",
+          "args": []
+        }
+      ]
+    }
+  }
+}

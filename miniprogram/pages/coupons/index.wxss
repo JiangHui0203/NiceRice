@@ -1,0 +1,10 @@
+/* ==========================================================================
+   Coupons Management Page Styles (Modular Index)
+   ========================================================================== */
+
+
+@import "./couponFilter.wxss";
+@import "./couponCompare.wxss";
+@import "./couponCards.wxss";
+@import "./couponShare.wxss";
+@import "./couponStatus.wxss";

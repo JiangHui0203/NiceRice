@@ -1,0 +1,264 @@
+<view class="page weekly-calendar-page" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+  <view wx:if="{{errorMsg}}" style="padding: 30rpx; background: #fee2e2; color: #991b1b; font-size: 28rpx; word-break: break-all; border-radius: 12rpx; margin-bottom: 20rpx;">
+    <view style="font-weight: bold; margin-bottom: 10rpx;">脚本/数据加载错误：</view>
+    <text>{{errorMsg}}</text>
+  </view>
+
+  <view class="page-header">
+    <view class="header-main-row">
+      <view class="header-title-col">
+        <view class="eyebrow">有时好饭</view>
+        <view class="page-title">日程总览</view>
+      </view>
+      
+      <!-- iOS Segmented Control style view toggle -->
+      <view class="view-toggle">
+        <view class="toggle-btn {{viewMode === 'calendar' ? 'active' : ''}}" bindtap="switchViewMode" data-mode="calendar">日历</view>
+        <view class="toggle-btn {{viewMode === 'list' ? 'active' : ''}}" bindtap="switchViewMode" data-mode="list">列表</view>
+      </view>
+    </view>
+
+    <!-- Unified, spacious weekly switcher card -->
+    <view class="week-switcher-bar">
+      <text class="switcher-year">{{dateLabelLine1}}</text>
+      <view class="switcher-controls-row">
+        <view class="arrow-btn-wrap" bindtap="prevWeek">
+          <text class="arrow-icon">◀</text>
+        </view>
+        <text class="switcher-days">{{dateLabelLine2}}</text>
+        <view class="arrow-btn-wrap" bindtap="nextWeek">
+          <text class="arrow-icon">▶</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 7-Day Mini Weather Strip -->
+    <view class="week-weather-strip" wx:if="{{days && days.length}}">
+      <view class="weather-strip-item {{day.isToday ? 'today' : ''}}" wx:for="{{days}}" wx:for-item="day" wx:key="dateStr">
+        <text class="strip-weekday">{{day.isToday ? '今天' : day.weekday}}</text>
+        <text class="strip-icon">{{day.weather.icon || '▫️'}}</text>
+        <text class="strip-temp">{{day.weather.tempSimple || '--'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 1. List View (列表视图 - 精致时间轴) -->
+  <block wx:if="{{viewMode === 'list'}}">
+    <view class="timeline-container">
+      <view class="timeline-item {{day.isToday ? 'is-today' : ''}} {{index >= 5 ? 'is-weekend-item' : ''}} {{index === 5 ? 'weekend-start-row' : ''}}" wx:for="{{days}}" wx:for-item="day" wx:key="dateStr">
+        
+        <!-- Left timeline marker -->
+        <view class="timeline-marker">
+          <view class="timeline-line"></view>
+          <view class="timeline-node {{day.isToday ? 'node-today' : (index >= 5 ? 'node-weekend' : '')}}">
+            <view class="node-date">{{day.date}}</view>
+          </view>
+        </view>
+        
+        <!-- Right content card -->
+        <view class="timeline-body">
+          <!-- Day sub-header -->
+          <view class="day-indicator {{index >= 5 ? 'indicator-weekend' : ''}}">
+            <text class="day-month-lbl">{{day.month}}月{{day.date}}日</text>
+            <text class="day-weekday-lbl {{index >= 5 ? 'weekend' : ''}}">{{day.isToday ? '今天' : (day.isTomorrow ? '明天' : day.weekday)}}</text>
+            <text class="weekend-pill-tag" wx:if="{{index >= 5 && !day.isToday && !day.isTomorrow}}">休</text>
+            <text class="day-weather-lbl" wx:if="{{day.weather}}">{{day.weather.icon}} {{day.weather.tempSimple}}</text>
+          </view>
+          
+          <!-- Cards -->
+          <block wx:if="{{day.items.length > 0}}">
+            <view class="schedule-card {{item.isPlanned ? 'planned' : 'recommended'}}" 
+                  wx:for="{{day.items}}" 
+                  wx:key="index" 
+                  bindtap="onItemTap" 
+                  data-id="{{item.couponId}}" 
+                  data-plan-id="{{item.planId}}" 
+                  data-planned="{{item.isPlanned}}">
+              
+              <view class="card-top">
+                <view class="card-scene">{{item.planTime.scene}}时段</view>
+                <view class="card-badge {{item.isPlanned ? 'badge-planned' : 'badge-recommended'}}">
+                  {{item.isPlanned ? '已排定' : (item.score !== null && item.score !== undefined ? item.score + '% 适合度' : '待评估')}}
+                </view>
+              </view>
+              
+              <view class="card-title">{{item.title}}</view>
+              
+              <view class="card-meta" wx:if="{{item.coupon}}">
+                <view class="meta-tag expiration" wx:if="{{item.coupon.expiresIn}}">
+                  <text class="tag-label">有效期</text>
+                  <text class="tag-value">{{item.coupon.expiresIn}}</text>
+                </view>
+                <view class="meta-tag price" wx:if="{{item.coupon.price}}">
+                  <text class="tag-label">价值</text>
+                  <text class="tag-value">¥{{item.coupon.price}}</text>
+                </view>
+              </view>
+              
+              <view class="card-reason" wx:if="{{!item.isPlanned && item.reasons && item.reasons.length}}">
+                <text class="reason-title">推荐理由：</text>
+                <text class="reason-text">{{item.reasons[0]}}</text>
+              </view>
+            </view>
+          </block>
+          
+          <!-- Empty slot -->
+          <block wx:else>
+            <view class="empty-agenda" bindtap="goCoupons">
+              <view class="empty-agenda-left">
+                <view class="empty-title">暂无日程安排</view>
+                <view class="empty-sub">点击前往券包，自主安排生活行程</view>
+              </view>
+              <view class="empty-arrow">去安排 →</view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 2. Calendar Grid View (日历视图 - 周历卡片预览+当日日程详情+智能建议) -->
+  <block wx:else>
+    <!-- Top Weekly Ribbon Selector (Row of 7 columns with Brief schedule card preview) -->
+    <view class="calendar-ribbon-container">
+      <scroll-view class="calendar-ribbon" scroll-x="true" show-scrollbar="false">
+        <view class="ribbon-row">
+          <view class="ribbon-item {{selectedDateIndex === index ? 'active' : ''}} {{day.isToday ? 'today' : ''}} {{index >= 5 ? 'is-weekend' : ''}} {{index === 5 ? 'weekend-start' : ''}}" 
+                wx:for="{{days}}" 
+                wx:for-item="day" 
+                wx:key="dateStr"
+                bindtap="selectDate"
+                data-index="{{index}}">
+            <view class="ribbon-weekday">
+              <text>{{day.isToday ? '今天' : (day.isTomorrow ? '明天' : day.weekday)}}</text>
+              <text class="weekend-tag-tiny" wx:if="{{index >= 5 && !day.isToday && !day.isTomorrow}}">休</text>
+            </view>
+            <view class="ribbon-date-num">{{day.date}}</view>
+            
+            <!-- Weather capsule in ribbon -->
+            <view class="ribbon-weather-badge {{day.weather.isRain ? 'rain' : ''}}" wx:if="{{day.weather}}">
+              <text class="ribbon-weather-icon">{{day.weather.icon}}</text>
+              <text class="ribbon-weather-temp">{{day.weather.tempSimple}}</text>
+            </view>
+            
+            <!-- Dynamic vertical list of brief badges -->
+            <block wx:if="{{day.briefLabels.length > 0}}">
+              <view class="ribbon-brief-badge {{item.isPlanned ? 'planned' : 'recommended'}}" 
+                    wx:for="{{day.briefLabels}}" 
+                    wx:key="label">
+                {{item.label}}
+              </view>
+            </block>
+            <view class="ribbon-brief-empty" wx:else>+</view>
+          </view>
+        </view>
+      </scroll-view>
+      <!-- Floating today button at the bottom-right corner of the calendar card -->
+      <view class="today-float-btn" bindtap="jumpToToday" wx:if="{{weekOffset !== 0 || (days[selectedDateIndex] && !days[selectedDateIndex].isToday)}}">今</view>
+    </view>
+
+    <!-- Detail Panel of selected date -->
+    <view class="agenda-detail-panel" wx:if="{{days[selectedDateIndex]}}">
+      <!-- Agenda Header -->
+      <view class="agenda-header-row">
+        <text class="agenda-header-title">
+          {{days[selectedDateIndex].month}}月{{days[selectedDateIndex].date}}日 · {{days[selectedDateIndex].weekday}} · 日程详情
+        </text>
+        <text class="agenda-header-status" wx:if="{{days[selectedDateIndex].isToday}}">今天</text>
+        <text class="agenda-header-status" wx:elif="{{days[selectedDateIndex].isTomorrow}}">明天</text>
+      </view>
+
+      <!-- Day Weather Forecast Banner -->
+      <view class="agenda-weather-bar card" wx:if="{{days[selectedDateIndex].weather}}">
+        <view class="agenda-weather-main">
+          <text class="agenda-weather-icon">{{days[selectedDateIndex].weather.icon}}</text>
+          <view class="agenda-weather-text">
+            <view class="agenda-weather-title">{{days[selectedDateIndex].weather.condition}} · {{days[selectedDateIndex].weather.temperature}}</view>
+            <view class="agenda-weather-desc">{{days[selectedDateIndex].weather.summary}}</view>
+          </view>
+        </view>
+        <view class="agenda-weather-tips">
+          <text class="agenda-weather-chip" wx:for="{{days[selectedDateIndex].weather.tips}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- Main arrangements for selected date -->
+      <view class="agenda-arrangements">
+        <block wx:if="{{days[selectedDateIndex].items.length > 0}}">
+          <view class="schedule-card {{item.isPlanned ? 'planned' : 'recommended'}}" 
+                wx:for="{{days[selectedDateIndex].items}}" 
+                wx:key="index" 
+                bindtap="onItemTap" 
+                data-id="{{item.couponId}}" 
+                data-plan-id="{{item.planId}}" 
+                data-planned="{{item.isPlanned}}">
+            
+            <view class="card-top">
+              <view class="card-scene">{{item.planTime.scene}}时段</view>
+              <view class="card-badge {{item.isPlanned ? 'badge-planned' : 'badge-recommended'}}">
+                {{item.isPlanned ? '已排定' : (item.score !== null && item.score !== undefined ? item.score + '% 适合度' : '待评估')}}
+              </view>
+            </view>
+            
+            <view class="card-title">{{item.title}}</view>
+            
+            <view class="card-meta" wx:if="{{item.coupon}}">
+              <view class="meta-tag expiration" wx:if="{{item.coupon.expiresIn}}">
+                <text class="tag-label">有效期</text>
+                <text class="tag-value">{{item.coupon.expiresIn}}</text>
+              </view>
+              <view class="meta-tag price" wx:if="{{item.coupon.price}}">
+                <text class="tag-label">价值</text>
+                <text class="tag-value">¥{{item.coupon.price}}</text>
+              </view>
+            </view>
+            
+            <view class="card-reason" wx:if="{{!item.isPlanned && item.reasons && item.reasons.length}}">
+              <text class="reason-title">推荐理由：</text>
+              <text class="reason-text">{{item.reasons[0]}}</text>
+            </view>
+          </view>
+        </block>
+        
+        <block wx:else>
+          <!-- Elegant placeholder card when empty -->
+          <view class="agenda-empty-card card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48rpx 32rpx; border-radius: 20rpx; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);">
+            <view style="font-size: 64rpx; line-height: 1; margin-bottom: 16rpx;">☕</view>
+            <view style="font-size: 30rpx; font-weight: 700; color: var(--text-main); margin-bottom: 8rpx;">这一天暂无就餐日程</view>
+            <view style="font-size: 24rpx; color: var(--text-muted); margin-bottom: 28rpx; max-width: 440rpx; line-height: 1.4;">悠闲时光自由支配，不妨挑选心仪的卡券或摇一顿美食犒劳自己！</view>
+            <view style="display: flex; gap: 16rpx; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-secondary compact" bindtap="goFoodWheel" style="font-size: 24rpx; height: 64rpx; line-height: 64rpx; padding: 0 24rpx; border-radius: 32rpx;">🎲 吃啥转盘</button>
+              <button class="btn btn-primary compact" bindtap="goCoupons" style="font-size: 24rpx; height: 64rpx; line-height: 64rpx; padding: 0 28rpx; border-radius: 32rpx; font-weight: 700;">+ 前往券包安排</button>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <!-- Suggestions for selected date (Recommended coupons list) -->
+      <view class="agenda-suggestions" wx:if="{{days[selectedDateIndex].suggestions.length > 0}}">
+        <view class="suggestions-header">
+          <text class="suggestions-header-title">适合这天安排的券</text>
+          <text class="suggestions-header-desc">依据您的偏好和可用时段智能匹配</text>
+        </view>
+        
+        <view class="suggestions-list">
+          <view class="suggestion-item" wx:for="{{days[selectedDateIndex].suggestions}}" wx:key="id" bindtap="onItemTap" data-id="{{item.id}}">
+            <view class="suggestion-info">
+              <view class="suggestion-badge-row">
+                <text class="suggestion-scene">{{item.scene}}时段</text>
+                <text class="suggestion-score">{{item.score !== null && item.score !== undefined ? item.score + '% 匹配' : '待评估'}}</text>
+              </view>
+              <view class="suggestion-title">{{item.title}}</view>
+              <view class="suggestion-meta">
+                <text class="suggestion-meta-text" wx:if="{{item.price}}">价值 ¥{{item.price}}</text>
+                <text class="suggestion-meta-divider" wx:if="{{item.price}}">|</text>
+                <text class="suggestion-meta-text">{{item.expiresIn}}</text>
+              </view>
+            </view>
+            <view class="suggestion-action-btn" catchtap="goPlanConfirm" data-id="{{item.id}}">安排</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,650 @@
+<view class="container">
+  <!-- 1. Header and description -->
+  <view class="header-card">
+    <view class="header-title-row">
+      <view class="header-title">👥 社交黄金空档</view>
+      <view class="header-share-pill-btn" bindtap="openInviteShareDrawer">
+        <text style="font-size: 22rpx;">✉️</text>
+        <text style="margin-left: 6rpx;">邀请协同</text>
+      </view>
+    </view>
+    <view class="header-desc">多选好友共享空档，快速锁定本周最佳出行时间。</view>
+  </view>
+
+  <!-- P2P Import Success Alert Tip -->
+  <view class="collab-feedback-bubble" wx:if="{{showInviteSuccessTip}}">
+    <text style="flex: 1;">{{inviteSuccessTip}}</text>
+    <view class="collab-share-back-btn" bindtap="openInviteShareDrawer">回赠我的空档</view>
+    <view style="padding: 10rpx; margin-left: 10rpx; font-weight: bold; flex-shrink: 0;" bindtap="closeInviteSuccessTip">✕</view>
+  </view>
+
+  <!-- 2. Friend Multi-Selector -->
+  <view class="section">
+    <view class="section-title">选择好友进行协同</view>
+    <scroll-view class="friend-scroll" scroll-x="true" show-scrollbar="false">
+      <view class="friend-list">
+        <view
+          class="friend-tag {{item.selected ? 'active' : ''}} theme-color-{{index % 2}}"
+          wx:for="{{friends}}"
+          wx:for-index="index"
+          wx:key="id"
+          bindtap="onFriendTap"
+          data-id="{{item.id}}"
+        >
+          <text class="friend-check" wx:if="{{item.selected}}">✓</text>
+          <text class="friend-name">{{item.name}}</text>
+          <!-- Warning dot if friend has no slots defined -->
+          <view class="friend-warn-dot" wx:if="{{!item.slots || !item.slots.length}}"></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 3. The 7x3 Heatmap Grid -->
+  <view class="section">
+    <view class="section-title">时间重合热力图</view>
+    <view class="card heatmap-container">
+      <!-- Weekday Headers -->
+      <view class="heatmap-header-row">
+        <view class="heatmap-label-header"></view>
+        <view
+          class="heatmap-col-header {{index >= 5 ? 'is-weekend' : ''}} {{index === 5 ? 'weekend-start' : ''}}"
+          wx:for="{{weekdays}}"
+          wx:key="*this"
+        >
+          <text class="col-header-text">{{item}}</text>
+          <text class="weekend-pill" wx:if="{{index >= 5}}">休</text>
+        </view>
+      </view>
+
+      <!-- Heatmap rows -->
+      <view class="heatmap-row" wx:for="{{heatmapRows}}" wx:for-item="row" wx:for-index="sceneIdx" wx:key="scene">
+        <view class="heatmap-row-label">
+          <view class="scene-emoji">{{row.emoji}}</view>
+          <view class="scene-name">{{row.name}}</view>
+        </view>
+
+        <view
+          class="heatmap-cell {{cell.activeClass}} {{activeDayIdx === dayIdx && activeSceneIdx === sceneIdx ? 'is-selected' : ''}} {{dayIdx >= 5 ? 'is-weekend-cell' : ''}} {{dayIdx === 5 ? 'weekend-start' : ''}}"
+          wx:for="{{row.cells}}"
+          wx:for-item="cell"
+          wx:for-index="dayIdx"
+          wx:key="day"
+          bindtap="onCellTap"
+          data-day-idx="{{dayIdx}}"
+          data-scene-idx="{{sceneIdx}}"
+        >
+          <!-- Bottom-up column fill bar -->
+          <view class="cell-fill-bar" style="height: {{cell.ratioPercent}}%;"></view>
+          <view class="cell-golden-star" wx:if="{{cell.isGoldenSlot}}">✨</view>
+
+          <view class="cell-inner-wrap">
+            <text class="cell-ratio {{cell.overlapCount === 0 ? 'is-empty' : ''}}" wx:if="{{selectedFriendsCount > 0}}">{{cell.overlapCount > 0 ? (cell.overlapCount + '/' + cell.totalSelected) : '-'}}</text>
+            <text class="cell-ratio is-empty" wx:else>-</text>
+
+            <!-- Winning option activity tags inside the cell (supports multiple arrangement capsules) -->
+            <view class="cell-activity-tags-column" wx:if="{{cell.winningOptions && cell.winningOptions.length}}">
+              <view class="cell-activity-tag" wx:for="{{cell.winningOptions}}" wx:for-item="optName" wx:key="*this">{{optName}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="heatmap-legend">
+      <view class="legend-item"><view class="legend-box level-none"></view><text>无空</text></view>
+      <view class="legend-item"><view class="legend-box level-partial"></view><text>有冲突</text></view>
+      <view class="legend-item"><view class="legend-box level-full"></view><text>完美有空</text></view>
+    </view>
+
+    <!-- Heatmap guide block -->
+    <view class="heatmap-helper-card">
+      <view class="helper-icon">💡</view>
+      <view class="helper-text">
+        绿色代表有空（高亮深绿为全员有空）。好友旁的 <text style="color: #ff9500; font-weight: 800;">🟠</text> 表示该好友尚未设置/同步空档时间。
+      </view>
+    </view>
+  </view>
+
+
+
+
+  <!-- 时段聚焦详情小弹窗 (硬件加速 60/120fps 空间位移绽放) -->
+  <view class="slot-detail-modal-mask {{showSlotDetailModal ? 'show' : ''}}" bindtap="closeSlotDetailModal">
+    <view class="slot-detail-modal-card {{isModalAnimating ? 'animating' : ''}}" catchtap="stopPropagation" style="--origin-delta-x: {{modalDeltaX || 0}}px; --origin-delta-y: {{modalDeltaY || 0}}px; {{modalDragY ? 'transform: translateY(' + modalDragY + 'px);' : ''}}">
+      <!-- iOS 下拉收起把手条 -->
+      <view class="modal-pull-handle-bar" bindtouchstart="onModalTouchStart" bindtouchmove="onModalTouchMove" bindtouchend="onModalTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <!-- 弹窗头部 -->
+      <view class="slot-modal-header" bindtouchstart="onModalTouchStart" bindtouchmove="onModalTouchMove" bindtouchend="onModalTouchEnd">
+        <view class="slot-modal-title-wrap">
+          <view class="slot-modal-title-row">
+            <text class="slot-modal-title">📅 {{activeCell.day}} · {{activeCell.scene}}</text>
+            <view class="slot-modal-overlap-pill {{activeCell.overlapCount === activeCell.totalSelected && activeCell.totalSelected > 0 ? 'full' : (activeCell.overlapCount > 0 ? 'partial' : 'none')}}">
+              {{activeCell.overlapCount}}/{{activeCell.totalSelected}} 人有空
+            </view>
+          </view>
+          <view class="slot-modal-time">🕒 时段：{{activeCell.timeRange}}</view>
+        </view>
+        <view class="slot-modal-close" bindtap="closeSlotDetailModal">✕</view>
+      </view>
+
+      <scroll-view class="slot-modal-scroll" scroll-y="true">
+        <!-- 1. 已排定协同活动卡 (若已存在计划) -->
+        <view class="slot-modal-plan-card" wx:if="{{activeCellPlan}}">
+          <view class="slot-modal-plan-tag">📌 当前已锁定协同活动</view>
+          <view class="slot-modal-plan-title">{{activeCellPlan.title}}</view>
+          <view class="slot-modal-plan-meta">
+            <text class="slot-modal-plan-venue">📍 {{activeCellPlan.location.name || '待定地点'}}</text>
+            <text class="slot-modal-plan-price" wx:if="{{activeCellPlan.price}}">💰 ¥{{activeCellPlan.price}}</text>
+          </view>
+          <view class="slot-modal-plan-dishes" wx:if="{{activeCellPlan.dishes}}">🍽️ {{activeCellPlan.dishes}}</view>
+          <view class="slot-modal-plan-note" wx:if="{{activeCellPlan.note}}">💡 {{activeCellPlan.note}}</view>
+        </view>
+
+        <!-- 2. 好友空档状况透视表 -->
+        <view class="slot-modal-section">
+          <view class="slot-modal-sec-title">👥 好友空档透视</view>
+          <view class="slot-modal-friend-list">
+            <view class="slot-modal-friend-row" wx:for="{{activeCell.friendStatus}}" wx:key="name">
+              <view class="slot-modal-friend-left">
+                <text class="status-indicator {{item.isAvailable ? 'available' : 'busy'}}">{{item.isAvailable ? '✓' : '✗'}}</text>
+                <text class="slot-modal-friend-name">{{item.name}}</text>
+              </view>
+              <text class="slot-modal-friend-desc">{{item.isAvailable ? (item.slotDetail || '有空档') : '此时间不可约'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 3. 适合本时段的精选方案 -->
+        <view class="slot-modal-section" wx:if="{{recommendedCoupons.length > 0}}">
+          <view class="slot-modal-sec-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <text>💡 适合本时段的优惠方案</text>
+            <text style="font-size: 21rpx; color: #0d9488; font-weight: 600;" bindtap="openCandidateDrawerFromModal">更多候选 ›</text>
+          </view>
+          <view class="slot-modal-coupon-list">
+            <view class="slot-modal-coupon-card" wx:for="{{recommendedCoupons}}" wx:key="id">
+              <view class="slot-modal-coupon-body">
+                <view class="slot-modal-coupon-title">{{item.title}}</view>
+                <view class="slot-modal-coupon-venue">{{item.venue || item.merchantName || '店铺待补充'}} · {{item.people || '人数待补充'}}</view>
+                <view class="slot-modal-coupon-price-row">
+                  <text class="slot-modal-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+                  <text class="slot-modal-orig" wx:if="{{item.originalPrice}}">¥{{item.originalPrice}}</text>
+                  <text class="slot-modal-expire">{{item.expiresIn}}</text>
+                </view>
+                <view class="slot-modal-dishes" wx:if="{{item.dishes}}">🍽️ {{item.dishes}}</view>
+              </view>
+              <button class="slot-modal-schedule-btn" bindtap="scheduleCouponToActiveSlot" data-id="{{item.id}}">➕ 安排</button>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 弹窗底部操作按钮 -->
+      <view class="slot-modal-footer">
+        <button class="slot-modal-btn outline" bindtap="printAndCopySlotSchedule">📋 导出安排</button>
+        <button class="slot-modal-btn outline" bindtap="openCandidateDrawerFromModal">🎫 约局候选</button>
+        <button class="slot-modal-btn primary" bindtap="goToDetailPageFromModal">🗳️ 决策计划单</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 5. Settings Drawer -->
+  <view class="drawer-mask {{showSettingsDrawer ? 'show' : ''}}" bindtap="closeSettingsDrawer">
+    <view class="drawer-container" style="{{drawerDragY ? 'transform: translateY(' + drawerDragY + 'px);' : ''}}" catchtap="stopPropagation">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onDrawerTouchStart" bindtouchmove="onDrawerTouchMove" bindtouchend="onDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header">
+        <text class="drawer-title">⚙️ 热力图设置</text>
+        <view class="drawer-close" bindtap="closeSettingsDrawer">关闭</view>
+      </view>
+      <scroll-view class="drawer-content drawer-scroll" scroll-y="true">
+        <!-- Preset options -->
+        <view class="edit-list-title">时段方案预设</view>
+        <view class="preset-grid">
+          <view class="preset-card {{currentPresetKey === 'default' ? 'active' : ''}}" bindtap="selectPreset" data-key="default">
+            <text class="preset-name">🍱 经典三段 (默认)</text>
+            <text class="preset-desc">包含：午餐、下午茶、晚餐。最适合常规聚餐。</text>
+          </view>
+          <view class="preset-card {{currentPresetKey === 'threeMeals' ? 'active' : ''}}" bindtap="selectPreset" data-key="threeMeals">
+            <text class="preset-name">🥐 餐饮四餐</text>
+            <text class="preset-desc">包含：早餐、午餐、下午茶、晚餐。覆盖全天用餐。</text>
+          </view>
+          <view class="preset-card {{currentPresetKey === 'leisure' ? 'active' : ''}}" bindtap="selectPreset" data-key="leisure">
+            <text class="preset-name">🍻 周末休闲</text>
+            <text class="preset-desc">包含：下午茶、夜间聚餐、深夜桌游。适合周末轰趴。</text>
+          </view>
+          <view class="preset-card {{currentPresetKey === 'allDay' ? 'active' : ''}}" bindtap="selectPreset" data-key="allDay">
+            <text class="preset-name">📖 全天段排程</text>
+            <text class="preset-desc">包含：上午、下午、晚上。适合通用日常活动协同。</text>
+          </view>
+        </view>
+
+        <!-- Current scenes list -->
+        <view class="edit-list-title">当前时段列表 ({{scenes.length}})</view>
+        <view class="edit-item" wx:for="{{scenes}}" wx:key="id">
+          <view class="edit-item-left">
+            <view class="icon-svg {{item.icon}}"></view>
+            <view class="edit-item-info">
+              <text class="edit-item-name">{{item.emoji}} {{item.name}}</text>
+              <text class="edit-item-time">{{item.timeRange}}</text>
+            </view>
+          </view>
+          <view class="edit-delete-btn" bindtap="deleteScene" data-id="{{item.id}}" wx:if="{{scenes.length > 1}}">删除</view>
+        </view>
+
+        <!-- Add custom scene form -->
+        <view class="form-section">
+          <view class="form-title">➕ 自定义新时段</view>
+          <view class="form-row">
+            <text class="form-label">时段名称</text>
+            <input class="form-input" placeholder="例如：夜跑、剧本杀" value="{{newCustomSceneName}}" bindinput="onCustomSceneNameInput" maxlength="24"/>
+          </view>
+          <view class="form-row">
+            <text class="form-label">起止时间</text>
+            <view class="time-pickers">
+              <picker mode="time" value="{{newCustomSceneStart}}" bindchange="onCustomSceneStartChange" class="time-picker-btn">
+                <view>{{newCustomSceneStart}}</view>
+              </picker>
+              <text style="color: #64748b;">至</text>
+              <picker mode="time" value="{{newCustomSceneEnd}}" bindchange="onCustomSceneEndChange" class="time-picker-btn">
+                <view>{{newCustomSceneEnd}}</view>
+              </picker>
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label">绑定矢量图标</text>
+            <scroll-view class="icon-selector-scroll" scroll-x="true">
+              <view class="icon-selector-row">
+                <view
+                  class="icon-select-item {{newCustomSceneIcon === item.name ? 'selected' : ''}}"
+                  wx:for="{{iconOptions}}"
+                  wx:key="name"
+                  bindtap="onCustomSceneIconSelect"
+                  data-icon="{{item.name}}"
+                >
+                  <view class="icon-svg {{item.name}}"></view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+          <button class="form-submit-btn" bindtap="addCustomScene">添加自定义时段</button>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 6. Friends Slots Management Drawer -->
+  <view class="drawer-mask {{showFriendDrawer ? 'show' : ''}}" bindtap="closeFriendDrawer">
+    <view class="drawer-container" style="{{drawerDragY ? 'transform: translateY(' + drawerDragY + 'px);' : ''}}" catchtap="stopPropagation">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onDrawerTouchStart" bindtouchmove="onDrawerTouchMove" bindtouchend="onDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header">
+        <text class="drawer-title">👤 好友空档设置</text>
+        <view class="drawer-close" bindtap="closeFriendDrawer">关闭</view>
+      </view>
+      <scroll-view class="drawer-content drawer-scroll" scroll-y="true">
+
+        <!-- Part A: User self profile (我的设置) -->
+        <view class="friend-manage-section">
+          <view class="friend-name-row">
+            <view style="display: flex; align-items: center; gap: 10rpx; width: 100%;">
+              <text style="font-size: 32rpx; flex-shrink: 0;">👤</text>
+              <input
+                style="font-size: 28rpx; font-weight: 850; color: #0f766e; border-bottom: 1rpx dashed #0d9488; width: 180rpx; padding: 4rpx; flex-shrink: 0;"
+                value="{{selfName}}"
+                bindblur="onSelfNameInput"
+                placeholder="我的名字"
+                maxlength="24"
+              />
+              <text style="font-size: 20rpx; color: #64748b; font-weight: bold; flex-shrink: 0;">(我 - 编辑名字)</text>
+            </view>
+          </view>
+          <view class="friend-slots-box">
+            <view style="margin-bottom: 10rpx; font-size: 20rpx; color: #94a3b8; font-weight: 700;">我的空档列表：</view>
+            <view class="friend-slot-chips">
+              <view class="friend-slot-chip" wx:for="{{selfSlots}}" wx:key="*this">
+                <text>{{item}}</text>
+                <text class="friend-slot-chip-delete" bindtap="deleteSelfSlotInline" data-slot="{{item}}">×</text>
+              </view>
+              <view wx:if="{{!selfSlots.length}}" style="font-size: 22rpx; color: #94a3b8; margin: 10rpx 0;">暂无空档。使用下方表单为自己添加空档吧。</view>
+            </view>
+            <!-- Add slot inline -->
+            <view class="add-slot-form-inline">
+              <picker class="picker-inline" range="{{weekdayOptions}}" bindchange="onNewSlotDayChange">
+                <view>{{newSlotDay}}</view>
+              </picker>
+              <picker mode="time" class="picker-inline" value="{{newSlotStart}}" bindchange="onNewSlotStartChange">
+                <view>{{newSlotStart}}</view>
+              </picker>
+              <text style="font-size: 16rpx; color: #94a3b8;">至</text>
+              <picker mode="time" class="picker-inline" value="{{newSlotEnd}}" bindchange="onNewSlotEndChange">
+                <view>{{newSlotEnd}}</view>
+              </picker>
+              <view class="btn-inline-add" bindtap="addSelfSlotInline">添加</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Part B: Friends management -->
+        <view class="friend-manage-section" wx:for="{{friends}}" wx:key="id" wx:if="{{!item.isSelf}}">
+          <view class="friend-name-row">
+            <text class="friend-main-name">👤 {{item.name}}</text>
+            <text class="friend-remove-btn" bindtap="deleteFriend" data-id="{{item.id}}">删除好友</text>
+          </view>
+          <view class="friend-slots-box">
+            <view style="margin-bottom: 10rpx; font-size: 20rpx; color: #94a3b8; font-weight: 700;">空档列表：</view>
+            <view class="friend-slot-chips">
+              <view class="friend-slot-chip" wx:for="{{item.slots}}" wx:for-item="slot" wx:key="*this">
+                <text>{{slot}}</text>
+                <text class="friend-slot-chip-delete" bindtap="deleteFriendSlotInline" data-id="{{item.id}}" data-slot="{{slot}}">×</text>
+              </view>
+              <view wx:if="{{!item.slots.length}}" style="font-size: 22rpx; color: #94a3b8; margin: 10rpx 0;">暂无空档，建议导入或手动添加。</view>
+            </view>
+            <!-- Add slot inline -->
+            <view class="add-slot-form-inline">
+              <picker class="picker-inline" range="{{weekdayOptions}}" bindchange="onNewSlotDayChange">
+                <view>{{newSlotDay}}</view>
+              </picker>
+              <picker mode="time" class="picker-inline" value="{{newSlotStart}}" bindchange="onNewSlotStartChange">
+                <view>{{newSlotStart}}</view>
+              </picker>
+              <text style="font-size: 16rpx; color: #94a3b8;">至</text>
+              <picker mode="time" class="picker-inline" value="{{newSlotEnd}}" bindchange="onNewSlotEndChange">
+                <view>{{newSlotEnd}}</view>
+              </picker>
+              <view class="btn-inline-add" bindtap="addFriendSlotInline" data-id="{{item.id}}">添加</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Form to add new friend -->
+        <view class="form-section" style="margin-top: 30rpx;">
+          <view class="form-title">👤 添加新本地好友</view>
+          <view class="form-row">
+            <input class="form-input" placeholder="输入好友姓名" value="{{newFriendName}}" bindinput="onNewFriendNameInput" maxlength="24"/>
+          </view>
+          <button class="form-submit-btn" bindtap="addLocalFriend" style="margin-top: 10rpx;">添加好友</button>
+        </view>
+
+        <!-- Quick Invite Collaborator Action -->
+        <view class="friend-quick-invite-banner" bindtap="openInviteShareDrawer" style="margin-top: 24rpx; background: rgba(13, 148, 136, 0.08); border: 1rpx solid rgba(13, 148, 136, 0.2); border-radius: 16rpx; padding: 20rpx; display: flex; align-items: center; justify-content: space-between;">
+          <view>
+            <view style="font-size: 24rpx; font-weight: 850; color: #0d9488;">🤝 邀请微信好友协同</view>
+            <view style="font-size: 19rpx; color: #64748b; margin-top: 4rpx;">发送微信卡片或文案，好友点开即刻自动比对空档</view>
+          </view>
+          <view style="font-size: 22rpx; font-weight: 850; color: #0d9488;">去邀请 ›</view>
+        </view>
+
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 7. P2P Invitation Modal -->
+  <view class="modal-mask {{showInviteModal ? 'show' : ''}}">
+    <view class="modal-container invite-modal-container" wx:if="{{inviteData}}">
+      <view class="modal-icon">🤝</view>
+      <view class="modal-title">{{isInviteUpdate ? '更新好友空档' : '好友时间协同邀请'}}</view>
+      <view class="modal-body">
+        <view class="invite-modal-desc">
+          <text class="inviter-name">{{inviteData.name}}</text> 共享了本周空档，邀请你共同协同规划活动：
+        </view>
+        <view class="modal-slots-capsules">
+          <view class="slot-capsule" wx:for="{{inviteData.slots}}" wx:key="*this">
+            <text class="slot-capsule-dot">🟢</text>
+            <text class="slot-capsule-text">{{item}}</text>
+          </view>
+          <view class="slot-capsule-empty" wx:if="{{!inviteData.slots || !inviteData.slots.length}}">（暂未设定具体空档）</view>
+        </view>
+      </view>
+      <view class="modal-hint-text">
+        {{isInviteUpdate ? '已匹配好友记录，点击即可即时比对双方最佳相聚时段。' : '导入后将自动在好友列表中勾选，快速发现全员有空的黄金时段。'}}
+      </view>
+      <view class="modal-actions-v2">
+        <button class="modal-btn-v2 secondary" bindtap="closeInviteModal">仅查看</button>
+        <button class="modal-btn-v2 primary" bindtap="confirmImportInvite">{{isInviteUpdate ? '✓ 导入并更新' : '✓ 导入并比对空档'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 8. Bulk Export Drawer -->
+  <view class="drawer-mask {{showBulkExportDrawer ? 'show' : ''}}" bindtap="closeBulkExportDrawer">
+    <view class="drawer-container" style="{{drawerDragY ? 'transform: translateY(' + drawerDragY + 'px);' : ''}}" catchtap="stopPropagation">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onDrawerTouchStart" bindtouchmove="onDrawerTouchMove" bindtouchend="onDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header">
+        <text class="drawer-title">📋 本周计划多选批量导出</text>
+        <view class="drawer-close" bindtap="closeBulkExportDrawer">取消</view>
+      </view>
+      <scroll-view class="drawer-content drawer-scroll" scroll-y="true" style="max-height: 50vh;">
+        <view wx:if="{{exportableSlots.length > 0}}">
+          <view class="export-checkboxes-title">选择要导出的时段安排</view>
+          <view class="export-checkbox-list">
+            <view class="export-checkbox-row" wx:for="{{exportableSlots}}" wx:key="key" bindtap="toggleBulkExportSlot" data-key="{{item.key}}">
+              <view class="export-checkbox-box {{item.checked ? 'checked' : ''}}"></view>
+              <view class="export-checkbox-label">
+                <text class="export-check-name">{{item.day}}·{{item.scene}} ({{item.time}})</text>
+                <text class="export-check-desc">活动：{{item.activity}} | 参与：{{item.attendingCount}}人</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="export-checkboxes-title" style="margin-top: 20rpx;">内容定制</view>
+          <view class="export-checkbox-list">
+            <view class="export-checkbox-row" bindtap="toggleBulkExportOption" data-key="includeFriends">
+              <view class="export-checkbox-box {{bulkExportOptions.includeFriends ? 'checked' : ''}}"></view>
+              <view class="export-checkbox-label">
+                <text class="export-check-name">包含参与好友名单</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:else class="empty-export-state" style="padding: 44rpx 24rpx; text-align: center;">
+          <view style="font-size: 80rpx; margin-bottom: 12rpx;">🗳️</view>
+          <view style="font-size: 26rpx; font-weight: 800; color: #475569;">本周暂无活动决策安排</view>
+          <view style="font-size: 20rpx; color: #94a3b8; margin-top: 8rpx;">请先在热力图方格详情中对时段进行发起投票和决策，胜出活动会自动同步至此。</view>
+        </view>
+      </scroll-view>
+
+      <view class="drawer-footer-actions" wx:if="{{exportableSlots.length > 0}}" style="display: flex; gap: 20rpx; margin-top: 24rpx;">
+        <button class="drawer-btn drawer-btn-secondary" bindtap="copyBulkInviteText" style="flex: 1; height: 80rpx; border-radius: 40rpx; font-size: 24rpx; font-weight: 850; display: flex; align-items: center; justify-content: center; background: rgba(13, 148, 136, 0.06); color: #0d9488; border: 1rpx solid rgba(13, 148, 136, 0.15); margin: 0 !important;">💬 复制本周行程文案</button>
+        <button class="drawer-btn drawer-btn-primary" bindtap="saveBulkToMyPlans" style="flex: 1; height: 80rpx; border-radius: 40rpx; font-size: 24rpx; font-weight: 850; display: flex; align-items: center; justify-content: center; background: #0d9488; color: #ffffff; box-shadow: 0 4rpx 12rpx rgba(13, 148, 136, 0.2); margin: 0 !important;">💾 一键写入我的日程</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 9. Candidate Coupons & Plan Linking Drawer (约局候选抽屉：支持优惠券与自定义活动) -->
+  <view class="drawer-mask {{showCandidateDrawer ? 'show' : ''}}" bindtap="closeCandidateDrawer">
+    <view class="drawer-container" style="{{drawerDragY ? 'transform: translateY(' + drawerDragY + 'px);' : ''}}" catchtap="stopPropagation">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onDrawerTouchStart" bindtouchmove="onDrawerTouchMove" bindtouchend="onDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header">
+        <view class="drawer-title-wrap">
+          <view class="drawer-title-row">
+            <text class="drawer-title">{{isSharedCandidateMode ? '✉️ 好友分享的候选' : '🎫 约局候选方案'}}</text>
+            <text class="drawer-count-badge">已选 {{selectedCandidateCount}} / {{totalCandidateCount}} 项</text>
+          </view>
+          <view class="drawer-subtitle">{{isSharedCandidateMode ? '这是分享快照，不会覆盖你的本地候选' : '支持优惠券与自定义项目混合组合，一键生成群投票'}}</view>
+        </view>
+        <view class="drawer-close" bindtap="closeCandidateDrawer">✕</view>
+      </view>
+
+      <scroll-view class="drawer-content drawer-scroll" scroll-y="true" style="max-height: 56vh;">
+        <!-- Section 1: 现有可用优惠券 -->
+        <view class="candidate-section-title">
+          <text>{{isSharedCandidateMode ? '🎫 分享的优惠券候选' : '🎫 我的优惠券候选'}}</text>
+          <text class="candidate-section-sub" wx:if="{{heatmapCandidates.length}}">（点击卡片勾选）</text>
+        </view>
+        <view wx:if="{{heatmapCandidates.length > 0}}">
+          <view class="candidate-coupon-card {{item.selected ? 'selected' : ''}}" wx:for="{{heatmapCandidates}}" wx:key="id" bindtap="toggleCandidateSelect" data-id="{{item.id}}">
+            <view class="candidate-select-check {{item.selected ? 'checked' : ''}}"></view>
+            <view class="candidate-badge-pill">选项 {{item.badge}}</view>
+            <view class="candidate-coupon-body">
+              <view class="candidate-coupon-title">{{item.title}}</view>
+              <view class="candidate-coupon-venue">{{item.venue || item.merchantName || '店铺待补充'}} · {{item.people && item.people !== '人数待补充' ? ('适合' + item.people) : '人数待补充'}}</view>
+              <view class="candidate-coupon-meta">
+                <text class="candidate-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+                <text class="candidate-orig-price" wx:if="{{item.originalPrice}}">¥{{item.originalPrice}}</text>
+                <text class="candidate-expire">{{item.expiresIn}}</text>
+              </view>
+              <view class="candidate-dishes-text" wx:if="{{item.dishes}}">🍽️ {{item.dishes}}</view>
+            </view>
+          </view>
+        </view>
+        <view wx:else class="empty-candidate-tip">暂无可用券，可在下方添加自定义选项或去券包挑选</view>
+
+        <!-- Section 2: 自定义候选项目 -->
+        <view class="candidate-section-title" style="margin-top: 24rpx;">
+          <text>✍️ 自定义想吃/想玩的选项</text>
+        </view>
+
+        <!-- 自定义输入行 -->
+        <view class="custom-candidate-input-bar" wx:if="{{!isSharedCandidateMode}}">
+          <input
+            class="custom-candidate-input"
+            placeholder="输入聚餐或游玩项目（如：海底捞火锅）"
+            value="{{newCustomCandidateText}}"
+            bindinput="onCustomCandidateInput"
+            maxlength="40"
+            confirm-type="done"
+            bindconfirm="addCustomCandidate"
+          />
+          <button class="custom-candidate-add-btn" bindtap="addCustomCandidate">+ 添加</button>
+        </view>
+
+        <!-- 快捷预设标签 -->
+        <view class="quick-candidate-tags" wx:if="{{!isSharedCandidateMode}}">
+          <view
+            class="quick-candidate-tag"
+            wx:for="{{quickCandidateTags}}"
+            wx:key="*this"
+            bindtap="selectQuickTag"
+            data-tag="{{item}}"
+          >+ {{item}}</view>
+        </view>
+
+        <!-- 自定义候选列表 -->
+        <view class="custom-candidate-list" wx:if="{{customCandidates.length > 0}}">
+          <view
+            class="candidate-coupon-card custom-item {{item.selected ? 'selected' : ''}}"
+            wx:for="{{customCandidates}}"
+            wx:key="id"
+            bindtap="toggleCustomCandidateSelect"
+            data-id="{{item.id}}"
+          >
+            <view class="candidate-select-check {{item.selected ? 'checked' : ''}}"></view>
+            <view class="candidate-badge-pill custom-badge">选项 {{item.badge}}</view>
+            <view class="candidate-coupon-body">
+              <view class="candidate-coupon-title">{{item.title}}</view>
+              <view class="candidate-coupon-venue">🎯 自定义聚会活动 · 不限优惠券</view>
+            </view>
+            <view class="custom-candidate-delete" wx:if="{{!isSharedCandidateMode}}" catchtap="deleteCustomCandidate" data-id="{{item.id}}">✕</view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="candidate-drawer-footer">
+        <button class="candidate-footer-btn schedule" bindtap="addSelectedCandidateToPlan">✨ 加入协同计划</button>
+        <button class="candidate-footer-btn secondary" bindtap="copyHeatmapCandidateVoteText">💬 复制文案</button>
+        <button open-type="share" class="candidate-footer-btn primary">✉️ 微信投票卡</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 10. Invite & Collaboration Share Drawer (邀请好友协同与多种分享方式抽屉) -->
+  <view class="drawer-mask {{showInviteShareDrawer ? 'show' : ''}}" bindtap="closeInviteShareDrawer">
+    <view class="drawer-container" style="{{drawerDragY ? 'transform: translateY(' + drawerDragY + 'px);' : ''}}" catchtap="stopPropagation">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onDrawerTouchStart" bindtouchmove="onDrawerTouchMove" bindtouchend="onDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header">
+        <view class="drawer-title-wrap">
+          <view class="drawer-title-row">
+            <text class="drawer-title">🤝 邀请好友时间协同</text>
+          </view>
+          <view class="drawer-subtitle">共享你的本周空档，与微信好友共同比对重合度</view>
+        </view>
+        <view class="drawer-close" bindtap="closeInviteShareDrawer">✕</view>
+      </view>
+
+      <scroll-view class="drawer-content drawer-scroll" scroll-y="true" style="max-height: 58vh;">
+        <!-- 空档卡片预览 -->
+        <view class="invite-preview-card">
+          <view class="invite-preview-header">
+            <view class="invite-preview-avatar">👤</view>
+            <view class="invite-preview-user-info">
+              <view class="invite-preview-name-row">
+                <text class="invite-preview-name">{{selfName || '我'}}</text>
+                <text class="invite-preview-badge">我的空档卡片</text>
+              </view>
+              <view class="invite-preview-count">已设定 {{selfSlots.length}} 个空档时段</view>
+            </view>
+          </view>
+
+          <view class="invite-preview-slots" wx:if="{{selfSlots.length > 0}}">
+            <view class="invite-slot-pill" wx:for="{{selfSlots}}" wx:key="*this">
+              <text>🕒 {{item}}</text>
+            </view>
+          </view>
+          <view class="invite-preview-empty" wx:else>
+            <text>尚未设定空档，建议先去「好友空档」添加时段哦</text>
+          </view>
+
+          <view class="invite-preview-tip">💡 好友在微信中打开此卡片后，可一键导入您的空档并自动比对重合度！</view>
+        </view>
+
+        <!-- 分享方式选择 -->
+        <view class="candidate-section-title" style="margin-top: 24rpx;">
+          <text>🚀 选择协同与分享方式</text>
+        </view>
+
+        <view class="invite-methods-list">
+          <!-- 方式一：微信卡片 -->
+          <view class="invite-method-card">
+            <view class="invite-method-icon">✉️</view>
+            <view class="invite-method-info">
+              <view class="invite-method-title">发送微信协同卡片</view>
+              <view class="invite-method-desc">一键唤起微信好友/群转发，好友点击即刻完成时间比对</view>
+            </view>
+            <button open-type="share" class="invite-method-action-btn primary">发送</button>
+          </view>
+
+          <!-- 方式二：复制口令/文本 -->
+          <view class="invite-method-card">
+            <view class="invite-method-icon">💬</view>
+            <view class="invite-method-info">
+              <view class="invite-method-title">复制群邀请文案</view>
+              <view class="invite-method-desc">复制格式化时间表与口令，支持发至微信大群或私聊接龙</view>
+            </view>
+            <button class="invite-method-action-btn secondary" bindtap="copyInviteShareText">复制</button>
+          </view>
+
+          <!-- 方式三：单机测试模拟 -->
+          <view class="invite-method-card">
+            <view class="invite-method-icon">👥</view>
+            <view class="invite-method-info">
+              <view class="invite-method-title">单机测试模拟好友</view>
+              <view class="invite-method-desc">快速生成一个测试好友空档，即时体验热力图重合度计算</view>
+            </view>
+            <button class="invite-method-action-btn ghost" bindtap="simulateFriendCollaboration">模拟</button>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="candidate-drawer-footer">
+        <button class="candidate-footer-btn secondary" bindtap="closeInviteShareDrawer">完成</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部固定操作栏 (顺序: 计划设置、好友空档、约局候选) -->
+  <view class="heatmap-bottom-bar">
+    <button class="heatmap-action-btn" bindtap="openSettingsDrawer">计划设置</button>
+    <button class="heatmap-action-btn" bindtap="openFriendDrawer">好友空档</button>
+    <button class="heatmap-action-btn" bindtap="openCandidateDrawer">约局候选</button>
+  </view>
+</view>

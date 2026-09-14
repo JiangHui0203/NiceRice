@@ -1,0 +1,553 @@
+/**app.wxss**/
+button {
+  background: initial;
+  border-radius: 0;
+  box-sizing: border-box;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+button:focus{
+  outline: 0;
+}
+
+button::after{
+  border: none;
+}
+
+button[disabled] {
+  opacity: 0.48;
+}
+
+
+page {
+  /* ==========================================================================
+     全局统一网格系统规范 (Standard Unified Grid System)
+     ========================================================================== */
+  --page-padding-h: 28rpx;     /* 页面统一左右安全间距 */
+  --page-padding-v: 24rpx;     /* 页面统一定部安全间距 */
+  --card-padding-h: 24rpx;     /* 卡片统一内部左右安全间距 */
+  --card-padding-v: 24rpx;     /* 卡片统一内部上下安全间距 */
+  --card-radius: 20rpx;        /* 卡片统一圆角 */
+  
+  --primary-color: #3AAFA9;
+  --primary-light: #E8F8F5;
+  --primary-dark: #2B7A78;
+  --accent-color: #D99C52;
+  --accent-light: #FCF7EB;
+  --bg-color: #F4F7F7; /* Clean iOS neutral-cool background */
+  --card-bg: #ffffff; /* Solid white card background */
+  --text-primary: #0f172a; /* Slate 900 primary text */
+  --text-secondary: #475569; /* Slate 600 secondary text */
+  --text-muted: #94a3b8; /* Slate 400 muted text */
+  --border-color: rgba(58, 175, 169, 0.12);
+  --shadow-soft: 0 4rpx 16rpx rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 8rpx 24rpx rgba(58, 175, 169, 0.10);
+  --radius-lg: 24rpx;
+  --radius-md: 20rpx;
+  --radius-sm: 12rpx;
+  --transition-normal: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ==========================================================================
+     高定黄绿蓝三彩色彩空间规范 (Master Tri-Color Luxury System)
+     ========================================================================== */
+  /* 主题 0: 经典薄荷翠绿 (Fresh Mint Teal) - 用户指定的明快主色 */
+  --trio-0-primary: #3AAFA9;
+  --trio-0-gradient: linear-gradient(135deg, #ffffff 0%, #E8F8F5 100%);
+  --trio-0-bg-light: #E8F8F5;
+  --trio-0-text: #208A84;
+  --trio-0-border: rgba(58, 175, 169, 0.22);
+
+  /* 主题 1: 暖沙奶油金 (Butter Sand Gold) - 大转盘与经典温润暖黄，柔和醇厚 */
+  --trio-1-primary: #D99C52;
+  --trio-1-gradient: linear-gradient(135deg, #ffffff 0%, #FCF7EB 100%);
+  --trio-1-bg-light: #FCF7EB;
+  --trio-1-text: #8C5E1A;
+  --trio-1-border: rgba(217, 156, 82, 0.22);
+
+  /* 主题 2: 优雅青黛翡翠绿 (Classic Jade Teal) - 清透翠绿、去黑沉感、柔和稳重 */
+  --trio-2-primary: #0D9488;
+  --trio-2-gradient: linear-gradient(135deg, #ffffff 0%, #F0FDFA 100%);
+  --trio-2-bg-light: #F0FDFA;
+  --trio-2-text: #0D9488;
+  --trio-2-border: rgba(13, 148, 136, 0.22);
+
+  background: var(--bg-color);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  justify-content: flex-start;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--page-padding-v) var(--page-padding-h) 140rpx;
+}
+
+.page-header {
+  margin-bottom: 24rpx;
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-size: 24rpx;
+  font-weight: 700;
+  letter-spacing: 0.5rpx;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.page-title {
+  color: var(--text-primary);
+  font-size: 40rpx;
+  font-weight: 900;
+  letter-spacing: -0.5rpx;
+  line-height: 1.25;
+  margin-top: 6rpx;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 26rpx;
+  line-height: 1.6;
+  margin-top: 10rpx;
+}
+
+.section {
+  margin-top: 32rpx;
+}
+
+.section-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+  padding: 0 4rpx;
+}
+
+.section-title {
+  color: var(--text-primary);
+  font-size: 30rpx;
+  font-weight: 800;
+  letter-spacing: -0.3rpx;
+  line-height: 1.3;
+}
+
+.section-action {
+  color: var(--primary-color);
+  font-size: 24rpx;
+  font-weight: 700;
+  transition: var(--transition-normal);
+}
+
+.section-action:active {
+  opacity: 0.6;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-soft);
+  box-sizing: border-box;
+  padding: var(--card-padding-v) var(--card-padding-h);
+  transition: var(--transition-normal);
+}
+
+.card[bindtap]:active, .card-hover:active {
+  transform: scale(0.985);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(58, 175, 169, 0.12);
+}
+
+.button-row {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.btn {
+  align-items: center;
+  border-radius: var(--radius-md);
+  display: flex;
+  font-size: 28rpx;
+  font-weight: 700;
+  height: 88rpx;
+  justify-content: center;
+  line-height: 1;
+  min-width: 0;
+  padding: 0 36rpx;
+  transition: var(--transition-normal);
+  border: 1rpx solid transparent;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+.btn-secondary {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.btn-ghost {
+  background: #ffffff;
+  color: var(--text-secondary);
+  border-color: rgba(60, 60, 67, 0.12);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tag {
+  align-items: center;
+  background: rgba(58, 175, 169, 0.04);
+  border-radius: 12rpx;
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 22rpx;
+  height: 48rpx;
+  line-height: 1;
+  padding: 0 20rpx;
+  font-weight: 600;
+}
+
+.tag.green {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.tag.orange {
+  background: var(--accent-light);
+  color: var(--accent-color);
+}
+
+.tag.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.tag.blue {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* ========================================================== */
+/* iOS Inset Grouped List Layouts                             */
+/* ========================================================== */
+
+.ios-list-group {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1rpx solid var(--border-color);
+  box-shadow: var(--shadow-soft);
+  margin-top: 24rpx;
+  overflow: hidden;
+}
+
+.ios-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 32rpx;
+  background: #ffffff;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.ios-cell[bindtap]:active {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.ios-cell::after {
+  content: "";
+  position: absolute;
+  left: 32rpx;
+  right: 0;
+  bottom: 0;
+  height: 1rpx;
+  background: rgba(60, 60, 67, 0.08);
+}
+
+.ios-cell:last-child::after {
+  display: none;
+}
+
+.ios-cell-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.ios-cell-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  color: var(--text-muted);
+  font-size: 26rpx;
+}
+
+.ios-chevron {
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 3.5rpx solid rgba(60, 60, 67, 0.3);
+  border-right: 3.5rpx solid rgba(60, 60, 67, 0.3);
+  transform: rotate(45deg);
+  margin-left: 6rpx;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ios-icon-badge {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
+  flex-shrink: 0;
+}
+
+.ios-icon-badge.accent {
+  background: var(--accent-light);
+}
+
+.ios-icon-badge.neutral {
+  background: rgba(58, 175, 169, 0.04);
+}
+
+
+/* --- Unified Time Card (Forest & Oat Style) --- */
+.time-card {
+  border: 2rpx solid transparent;
+  padding: 28rpx;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 14rpx;
+  transition: var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+}
+
+.time-card.active {
+  border-color: var(--primary-color);
+  background: #ffffff;
+  box-shadow: var(--shadow-hover);
+}
+
+.time-card[bindtap]:active, .time-card-hover:active {
+  transform: scale(0.985);
+}
+
+.time-card-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.time-card-left {
+  align-items: center;
+  display: flex;
+  gap: 16rpx;
+}
+
+.time-badge {
+  border-radius: 10rpx;
+  font-size: 22rpx;
+  font-weight: 850;
+  line-height: 1;
+  padding: 10rpx 14rpx;
+  white-space: nowrap;
+}
+
+.time-badge.primary {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.time-badge.secondary {
+  background: var(--accent-light);
+  color: var(--accent-color);
+}
+
+.time-badge.neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.time-title {
+  color: var(--text-primary);
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.time-score-box {
+  align-items: baseline;
+  display: flex;
+  line-height: 1;
+}
+
+.time-score-num {
+  color: #16a34a;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.time-score-percent {
+  color: #16a34a;
+  font-size: 22rpx;
+  font-weight: 800;
+  margin-left: 2rpx;
+}
+
+.time-score-label {
+  color: var(--text-muted);
+  font-size: 18rpx;
+  font-weight: 700;
+  margin-left: 6rpx;
+}
+
+.time-card-body {
+  margin-top: 16rpx;
+}
+
+.time-card-desc {
+  color: var(--text-secondary);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.time-card-range {
+  color: var(--primary-color);
+  font-size: 22rpx;
+  font-weight: 700;
+  margin-top: 10rpx;
+}
+
+.time-card-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-top: 16rpx;
+}
+
+.warning-item {
+  align-items: flex-start;
+  background: #fffbeb;
+  border: 1rpx solid rgba(217, 119, 6, 0.15);
+  border-radius: 12rpx;
+  display: flex;
+  gap: 10rpx;
+  padding: 12rpx 16rpx;
+}
+
+.warning-icon {
+  font-size: 24rpx;
+  line-height: 1.25;
+}
+
+.warning-text {
+  color: #b45309;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.35;
+  flex: 1;
+}
+
+/* --- Color-Coded Recommendation Badges --- */
+.reason-badge {
+  border-radius: 10rpx;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 850;
+  line-height: 1;
+  padding: 12rpx 14rpx;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.reason-badge.time {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.reason-badge.weather {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.reason-badge.social {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.reason-badge.urgent {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.reason-badge.warning {
+  background: #fff3c7;
+  color: #d97706;
+}
+
+.reason-badge.default {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+
+/* ========================================================== */
+/* iOS 风格半屏抽屉与弹窗下拉把手条 (Pull Handle Bar)          */
+/* ========================================================== */
+.modal-pull-handle-bar,
+.drawer-pull-handle-bar {
+  width: 100%;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10rpx;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  touch-action: pan-y;
+}
+
+.pull-handle-indicator {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.modal-pull-handle-bar:active .pull-handle-indicator,
+.drawer-pull-handle-bar:active .pull-handle-indicator {
+  background: #94a3b8;
+  transform: scaleX(1.15);
+}

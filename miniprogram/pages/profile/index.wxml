@@ -1,0 +1,457 @@
+<view class="page profile-page">
+  <view class="page-header">
+    <view class="page-title">我的</view>
+  </view>
+
+  <!-- 个人卡片 (支持微信一键登录绑定) -->
+  <view class="profile-card card profile-theme-main" bindtap="handleProfileCardTap" hover-class="ios-hover">
+    <block wx:if="{{userInfo.loggedIn}}">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" catchtap="stopPropagation">
+        <image class="avatar-img" src="{{userInfo.avatarUrl || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
+      </button>
+      <view class="profile-card-right">
+        <view class="profile-name-row" style="display: flex; align-items: center; gap: 12rpx;">
+          <input type="nickname" class="profile-name-input" value="{{userInfo.nickName || '本地用户'}}" placeholder="请输入昵称" bindblur="onNicknameBlur" bindconfirm="onNicknameBlur" maxlength="32" catchtap="stopPropagation" />
+          <view class="tag {{userInfo.isCloudBound ? 'green' : 'gray'}} compact" style="font-size: 16rpx; padding: 2rpx 10rpx;">{{userInfo.isCloudBound ? '已绑定微信' : '本地离线档案'}}</view>
+        </view>
+        <view class="profile-desc" style="margin-top: 6rpx; font-size: 22rpx; color: var(--text-secondary);">{{userInfo.isCloudBound ? ('OpenID: ' + userInfo.openidShort) : '离线存储模式'}} (点击修改头像或昵称)</view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="avatar">👤</view>
+      <view class="profile-card-right">
+        <view class="profile-name" style="font-size: 32rpx; font-weight: bold; color: var(--text-primary);">未登录</view>
+        <view class="profile-desc" style="color: var(--text-secondary); font-size: 24rpx; margin-top: 6rpx;">点击绑定微信账户，体验云端日程同步</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 履约足迹与省钱账本入口 -->
+  <view class="profile-card card" style="margin-bottom: 24rpx; display: flex; align-items: center; justify-content: space-between; padding: 24rpx 28rpx;" bindtap="goCompletedHistory" hover-class="ios-hover">
+    <view style="display: flex; align-items: center; gap: 20rpx;">
+      <view class="ios-icon-badge trophy-badge">🏆</view>
+      <view>
+        <view style="font-size: 28rpx; font-weight: 700; color: var(--text-primary);">履约足迹与成就账本</view>
+        <view style="font-size: 22rpx; color: var(--text-secondary); margin-top: 4rpx;">已履约 {{activityStats.completedCount || 0}} 次好饭 · 累计已省 ¥{{activityStats.totalSaved || '0.0'}}</view>
+      </view>
+    </view>
+    <view style="display: flex; align-items: center; gap: 8rpx;">
+      <view class="tag green compact" wx:if="{{activityStats.completedCount > 0}}">已省 ¥{{activityStats.totalSaved}}</view>
+      <view class="ios-chevron-arrow"></view>
+    </view>
+  </view>
+
+  <view class="ios-list-group settings-group-container">
+    <!-- 1. 隐私与云端增强 -->
+    <view class="ios-cell-wrapper {{activeSections.privacy ? 'is-expanded' : ''}}">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="privacy">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge privacy-badge">🛡️</view>
+          <text class="ios-cell-title">隐私与云端增强</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{privacySummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.privacy ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.privacy}}">
+        <view class="settings-group-list">
+          <view class="settings-group-item">
+            <view class="settings-item-copy">
+              <view class="setting-title">云端增强</view>
+              <view class="setting-desc">{{privacy.cloudEnabled ? '云端能力已启用' : (privacy.cloudAvailable ? '仅在本地运行' : '云环境未配置，仅本地运行')}}</view>
+            </view>
+            <switch checked="{{privacy.cloudEnabled}}" color="#0f766e" bindchange="toggleCloudUpload" />
+          </view>
+          <view class="settings-group-item">
+            <view class="settings-item-copy">
+              <view class="setting-title">截图加密</view>
+              <view class="setting-desc">{{privacy.encryptAttachments ? '端侧本地加密存储' : '明文存储在本地缓存'}}</view>
+            </view>
+            <switch checked="{{privacy.encryptAttachments}}" color="#0f766e" bindchange="toggleAttachmentEncryption" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 2. 饮食与出行偏好 -->
+    <view class="ios-cell-wrapper {{activeSections.preferences ? 'is-expanded' : ''}}">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="preferences">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge food-badge">🍜</view>
+          <text class="ios-cell-title">饮食与出行偏好</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{preferencesSummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.preferences ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.preferences}}">
+        <!-- 饮食 -->
+        <view class="sub-section">
+          <view class="section-head">
+            <view class="section-title">我的忌口与喜好</view>
+            <button class="section-action edit-food-action" bindtap="openFoodEditor">详细编辑</button>
+          </view>
+          <view class="food-summary-container">
+            <view class="food-summary-row">
+              <view class="food-summary-title">爱吃</view>
+              <view class="food-chip-list" wx:if="{{preferences.likedFoods.length}}">
+                <view class="food-chip like" wx:for="{{preferences.likedFoods}}" wx:key="*this">{{item}}</view>
+              </view>
+              <view class="food-empty" wx:else>暂无</view>
+            </view>
+            <view class="food-summary-row">
+              <view class="food-summary-title">不吃</view>
+              <view class="food-chip-list" wx:if="{{preferences.dislikedFoods.length}}">
+                <view class="food-chip dislike" wx:for="{{preferences.dislikedFoods}}" wx:key="*this">{{item}}</view>
+              </view>
+              <view class="food-empty" wx:else>暂无</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 出行 -->
+        <view class="sub-section">
+          <view class="section-head">
+            <view class="section-title">出行偏好与最大耗时</view>
+          </view>
+          <view class="settings-group-list">
+            <view class="settings-group-item">
+              <view class="settings-item-copy">
+                <view class="setting-title">首选交通方式</view>
+                <view class="setting-desc">影响路线耗时与可行性评估</view>
+              </view>
+              <picker range="{{transportModes}}" range-key="label" value="{{transportModeIndex}}" bindchange="onTransportModeChange">
+                <view class="picker-display">{{preferences.transportMode === 'transit' ? '公共交通' : preferences.transportMode === 'walking' ? '步行优先' : preferences.transportMode === 'driving' ? '驾车/打车' : '骑行优先'}}</view>
+              </picker>
+            </view>
+            <view class="settings-group-item">
+              <view class="settings-item-copy">
+                <view class="setting-title">单程最大忍受耗时</view>
+                <view class="setting-desc">超过此时间的券会被降低推荐度</view>
+              </view>
+              <view class="slider-display-cell">
+                <text class="slider-val">{{preferences.maxTravelDuration}} 分钟</text>
+                <slider class="compact-slider" min="15" max="120" step="5" value="{{preferences.maxTravelDuration}}" activeColor="#0f766e" bindchange="onMaxTravelDurationChange" />
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 价格敏感度 -->
+        <view class="sub-section">
+          <view class="section-head">
+            <view class="section-title">价格敏感度</view>
+          </view>
+          <view class="choice-group">
+            <view class="choice-chip {{preferences.priceSensitivity === 'high' ? 'active' : ''}}" bindtap="setPriceSensitivity" data-val="high">省钱优先 (偏好低价高折扣)</view>
+            <view class="choice-chip {{preferences.priceSensitivity === 'medium' ? 'active' : ''}}" bindtap="setPriceSensitivity" data-val="medium">平衡性价比</view>
+            <view class="choice-chip {{preferences.priceSensitivity === 'low' ? 'active' : ''}}" bindtap="setPriceSensitivity" data-val="low">品质体验优先</view>
+          </view>
+        </view>
+
+        <!-- 消费偏好与常驻城市 -->
+        <view class="sub-section">
+          <view class="section-head">
+            <view class="section-title">商圈常驻城市</view>
+          </view>
+          <input class="input-modern" placeholder="输入常驻城市，如：上海、北京" value="{{preferences.homeCity}}" bindinput="onHomeCityInput" maxlength="64" />
+        </view>
+
+        <button class="btn btn-primary save-preferences" bindtap="savePreferences">保存偏好</button>
+      </view>
+    </view>
+
+    <!-- 3. 天气模拟设置 -->
+    <view class="ios-cell-wrapper {{activeSections.weather ? 'is-expanded' : ''}}">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="weather">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge weather-badge">⛅</view>
+          <text class="ios-cell-title">天气样例设置</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{weatherSummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.weather ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.weather}}">
+        <view class="section-head">
+          <view class="section-title">测试模拟天气</view>
+          <view class="section-action" bindtap="resetWeather">恢复实况</view>
+        </view>
+        <view class="weather-setting-container">
+          <view class="weather-current-panel">
+            <view class="weather-current-info">
+              <view class="setting-title">{{weather.condition}}</view>
+              <view class="setting-desc">{{weather.summary}}</view>
+            </view>
+            <view class="setting-right-badge">
+              <view class="weather-temp-pill">{{weather.temperatureRange}}</view>
+              <view class="weather-source-tag">{{isWeatherOverride ? '已覆盖' : '实况天气'}}</view>
+            </view>
+          </view>
+
+          <scroll-view scroll-x class="weather-category-tabs" enable-flex="true">
+            <view
+              wx:for="{{categories}}"
+              wx:key="id"
+              class="category-tab-btn {{activeCategory === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              bindtap="selectCategory"
+            >{{item.name}}</view>
+          </scroll-view>
+
+          <view class="weather-option-list">
+            <view
+              class="choice-chip {{weather.key === item.value ? 'active' : ''}}"
+              wx:for="{{activeSubWeathers}}"
+              wx:key="value"
+              data-value="{{item.value}}"
+              bindtap="selectWeather"
+            >{{item.label}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 4. 常用地点管理 -->
+    <view class="ios-cell-wrapper {{activeSections.locations ? 'is-expanded' : ''}}">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="locations">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge location-badge">📍</view>
+          <text class="ios-cell-title">常用地点管理</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{locationSummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.locations ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.locations}}">
+        <view class="section-head">
+          <view class="section-title">预设起点位置</view>
+          <view class="section-action" bindtap="resetLocations">重置默认</view>
+        </view>
+        <view class="settings-group-list">
+          <block wx:for="{{locations}}" wx:key="id">
+            <view class="location-row-item">
+              <view class="location-copy">
+                <view class="setting-title">{{item.name}}</view>
+                <view class="setting-desc">{{item.address || '暂无详细地址'}}</view>
+                <view class="setting-desc" wx:if="{{item.desc}}">{{item.desc}}</view>
+              </view>
+              <button class="location-edit-btn" bindtap="editLocation" data-id="{{item.id}}">编辑</button>
+            </view>
+            <view class="location-editor" wx:if="{{editingLocationId === item.id}}">
+              <input class="location-input" placeholder="地点名称" value="{{locationDraft.name}}" data-field="name" bindinput="onLocationDraftInput" maxlength="48" />
+              <input class="location-input" placeholder="详细地址" value="{{locationDraft.address}}" data-field="address" bindinput="onLocationDraftInput" maxlength="160" />
+              <textarea class="location-textarea" placeholder="备注（如大门、侧门等）" value="{{locationDraft.desc}}" data-field="desc" bindinput="onLocationDraftInput" maxlength="160"></textarea>
+              <view class="location-map-row">
+                <view class="location-map-copy">{{locationDraft.hasMapPoint ? '📍 已选择地图经纬度' : '❌ 未关联地图坐标'}}</view>
+                <button class="location-map-btn" bindtap="chooseLocationPoint">地图选点</button>
+              </view>
+              <view class="location-editor-actions">
+                <button class="location-editor-btn ghost" bindtap="cancelLocationEdit">取消</button>
+                <button class="location-editor-btn primary" bindtap="saveLocation">保存</button>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <!-- 5. 日程避让表 -->
+    <view class="ios-cell-wrapper {{activeSections.schedules ? 'is-expanded' : ''}}" id="schedule-section">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="schedules">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge calendar-badge">📅</view>
+          <text class="ios-cell-title">日程避让表</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{scheduleSummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.schedules ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.schedules}}">
+        <view class="section-head">
+          <view class="section-title">添加固定日程 (推荐会避开这些时段)</view>
+        </view>
+        <view class="schedule-editor-panel">
+          <input class="schedule-input" placeholder="例如 周三 14:00-16:00 组会" value="{{scheduleDraft}}" bindinput="onScheduleDraftInput" maxlength="180" />
+          <button class="schedule-add-btn" bindtap="addSchedule">添加</button>
+        </view>
+        <view class="settings-group-list" wx:if="{{schedules.length}}">
+          <view class="schedule-row-item" wx:for="{{schedules}}" wx:key="id">
+            <view class="schedule-entry-body">
+              <view class="setting-title">{{item.title}}</view>
+              <view class="setting-desc">{{item.weekday}} {{item.startTime}}-{{item.endTime}}</view>
+            </view>
+            <button class="schedule-remove" bindtap="removeSchedule" data-id="{{item.id}}">删除</button>
+          </view>
+        </view>
+        <button
+          wx:if="{{schedules.length < scheduleTotal}}"
+          class="btn btn-ghost compact"
+          bindtap="showMoreSchedules"
+        >显示更多日程（{{schedules.length}}/{{scheduleTotal}}）</button>
+      </view>
+    </view>
+
+    <!-- 6. 朋友可约与偏好 -->
+    <view class="ios-cell-wrapper {{activeSections.friends ? 'is-expanded' : ''}}">
+      <view class="ios-cell-trigger" bindtap="toggleSection" data-section="friends">
+        <view class="ios-cell-left">
+          <view class="ios-icon-badge friend-badge">👥</view>
+          <text class="ios-cell-title">朋友可约与偏好</text>
+        </view>
+        <view class="ios-cell-right">
+          <text class="ios-cell-summary">{{friendSummaryText}}</text>
+          <view class="ios-chevron-arrow {{activeSections.friends ? 'expanded' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ios-cell-expand-area" wx:if="{{activeSections.friends}}">
+        <!-- 1. 社交黄金空档热力图 Banner -->
+        <navigator class="friend-heatmap-banner" url="/pages/friend-heatmap/index" hover-class="ios-hover">
+          <view class="banner-left">
+            <view class="banner-icon-disc">📅</view>
+            <view class="banner-texts">
+              <view class="banner-title">社交黄金空档热力图</view>
+              <view class="banner-desc">智能计算多人时间交集 · 匹配最佳好券</view>
+            </view>
+          </view>
+          <view class="banner-action-pill">查看热力图 ➔</view>
+        </navigator>
+        
+        <!-- 2. 新增好友档案卡片 -->
+        <view class="friend-add-form-card">
+          <view class="form-card-title">＋ 录入好友偏好 (用于多人活动安排)</view>
+          <view class="form-row-full">
+            <view class="form-input-box">
+              <text class="input-prefix-icon">👤</text>
+              <input class="modern-input" placeholder="朋友姓名/昵称 (如: 小王)" value="{{friendDraftName}}" data-field="friendDraftName" bindinput="onFriendDraftInput" maxlength="24" />
+            </view>
+          </view>
+          <view class="form-row-split">
+            <view class="form-input-box flex-1">
+              <text class="input-prefix-icon">📍</text>
+              <input class="modern-input" placeholder="常驻商圈 (如: 陆家嘴)" value="{{friendDraftRegion}}" data-field="friendDraftRegion" bindinput="onFriendDraftInput" maxlength="64" />
+            </view>
+            <view class="form-input-box flex-1">
+              <text class="input-prefix-icon">🚫</text>
+              <input class="modern-input" placeholder="忌口 (如: 少辣、不吃羊)" value="{{friendDraftRestrictions}}" data-field="friendDraftRestrictions" bindinput="onFriendDraftInput" maxlength="256" />
+            </view>
+          </view>
+          <button class="btn btn-primary form-submit-btn" bindtap="addFriend">保存并添加好友</button>
+        </view>
+
+        <!-- 3. 已录入好友列表 -->
+        <view class="friend-list-wrap" wx:if="{{friends.length}}">
+          <view class="friend-card" wx:for="{{friends}}" wx:key="name">
+            <!-- 头部：头像 + 姓名 + 状态徽章 + 极简删除操作 -->
+            <view class="friend-card-head">
+              <view class="friend-avatar-disc" style="background: {{item.avatarBg}};">
+                {{item.avatarChar}}
+              </view>
+              <view class="friend-head-meta">
+                <view class="friend-name-row">
+                  <text class="friend-name-text">{{item.name}}</text>
+                  <text class="friend-status-chip {{item.hasSlots ? 'active' : 'idle'}}">{{item.statusLabel}}</text>
+                </view>
+                <view class="friend-travel-desc">📍 {{item.travelText}}</view>
+              </view>
+              <view class="friend-remove-trigger" catchtap="removeFriend" data-id="{{item.id || item.name}}" data-name="{{item.name}}">
+                移除
+              </view>
+            </view>
+
+            <!-- 忌口标签群 -->
+            <view class="friend-pills-section" wx:if="{{item.hasRestrictions}}">
+              <view class="section-micro-label">🚫 饮食忌口：</view>
+              <view class="pills-flex-wrap">
+                <view class="pill-item restriction" wx:for="{{item.restrictions}}" wx:for-item="r" wx:key="*this" catchtap="removeFriendRestriction" data-friend-id="{{item.id || item.name}}" data-restriction="{{r}}">
+                  {{r}} <text class="pill-del-x">×</text>
+                </view>
+              </view>
+            </view>
+
+            <!-- 空档时段群 -->
+            <view class="friend-pills-section" wx:if="{{item.hasSlots}}">
+              <view class="section-micro-label">⏰ 可约时段：</view>
+              <view class="pills-flex-wrap">
+                <view class="pill-item slot" wx:for="{{item.slots}}" wx:for-item="s" wx:key="*this" catchtap="removeFriendSlot" data-friend-id="{{item.id || item.name}}" data-slot="{{s}}">
+                  {{s}} <text class="pill-del-x">×</text>
+                </view>
+              </view>
+            </view>
+
+            <!-- 底部操作按钮 -->
+            <view class="friend-card-footer">
+              <button class="pill-action-btn" bindtap="addFriendSlot" data-id="{{item.id || item.name}}">＋ 加时段</button>
+              <button class="pill-action-btn" bindtap="addFriendRestriction" data-id="{{item.id || item.name}}">＋ 加忌口</button>
+              <button class="pill-action-btn" bindtap="editFriendTravel" data-id="{{item.id || item.name}}">📍 调出行范围</button>
+            </view>
+          </view>
+        </view>
+        <button
+          wx:if="{{friends.length < friendTotal}}"
+          class="btn btn-ghost compact"
+          bindtap="showMoreFriends"
+        >显示更多好友（{{friends.length}}/{{friendTotal}}）</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据管理与灾备恢复 -->
+  <view class="section" style="margin-top: 24rpx;">
+    <view class="ios-list-group settings-group-container" style="margin-top: 0;">
+      <!-- 备份导出 -->
+      <view class="ios-cell" bindtap="exportBackupData" style="display: flex; align-items: center; justify-content: space-between; padding: 24rpx 28rpx;">
+        <view class="ios-cell-left" style="display: flex; align-items: center; gap: 20rpx;">
+          <view class="ios-icon-badge backup-badge">💾</view>
+          <text class="ios-cell-title" style="font-weight: 700; color: var(--text-primary);">一键备份/导出数据</text>
+        </view>
+        <view class="ios-cell-right" style="display: flex; align-items: center; gap: 8rpx;">
+          <text class="ios-cell-summary">导出全部券与好友</text>
+          <view class="ios-chevron-arrow"></view>
+        </view>
+      </view>
+
+      <!-- 灾备恢复 -->
+      <view class="ios-cell" bindtap="importBackupData" style="display: flex; align-items: center; justify-content: space-between; padding: 24rpx 28rpx; border-top: 1rpx solid rgba(60, 60, 67, 0.08);">
+        <view class="ios-cell-left" style="display: flex; align-items: center; gap: 20rpx;">
+          <view class="ios-icon-badge restore-badge">📂</view>
+          <text class="ios-cell-title" style="font-weight: 700; color: var(--text-primary);">一键恢复/导入数据</text>
+        </view>
+        <view class="ios-cell-right" style="display: flex; align-items: center; gap: 8rpx;">
+          <text class="ios-cell-summary">从剪贴板读取恢复</text>
+          <view class="ios-chevron-arrow"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 开发者选项与实验功能 -->
+  <view class="section debug-section" style="margin-top: 24rpx;">
+    <view class="profile-card card" style="padding: 24rpx 28rpx; display: flex; align-items: center; justify-content: space-between;" bindtap="openDebug" hover-class="ios-hover">
+      <view style="display: flex; align-items: center; gap: 20rpx;">
+        <view class="ios-icon-badge debug-badge">🛠️</view>
+        <view>
+          <view style="display: flex; align-items: center; gap: 12rpx;">
+            <text style="font-size: 28rpx; font-weight: 700; color: var(--text-primary);">开发者选项与实验功能</text>
+            <view class="tag {{isWeatherOverride ? 'orange' : 'green'}} compact" style="font-size: 18rpx; padding: 2rpx 10rpx;">
+              {{isWeatherOverride ? '模拟天气中' : '和风实况天气'}}
+            </view>
+          </view>
+          <view style="font-size: 22rpx; color: var(--text-secondary); margin-top: 6rpx;">
+            模拟天气实验室 · 和风 API 联调 · 推荐算法 · 存储管理
+          </view>
+        </view>
+      </view>
+      <view class="ios-chevron-arrow"></view>
+    </view>
+  </view>
+  <!-- 版本信息页脚 -->
+  <view class="version-footer">
+    <text class="version-text">有时好饭 {{version || 'v0.7.4'}}</text>
+  </view>
+</view>

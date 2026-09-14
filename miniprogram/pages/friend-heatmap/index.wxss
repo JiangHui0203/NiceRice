@@ -1,0 +1,10 @@
+/* ========================================================== */
+/* Friend Availability Heatmap (Style Aggregator)             */
+/* ========================================================== */
+
+@import "./heatmapGrid.wxss";
+@import "./heatmapDrawer.wxss";
+@import "./heatmapPage.wxss";
+@import "./candidateDrawer.wxss";
+@import "./inviteShareDrawer.wxss";
+@import "./slotDetailModal.wxss";

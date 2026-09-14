@@ -1,0 +1,24 @@
+/* pages/completed-history/index.wxss */
+.completed-history-page {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.stats-card {
+  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.stats-card:active {
+  transform: scale(0.97);
+}
+
+.month-section {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}

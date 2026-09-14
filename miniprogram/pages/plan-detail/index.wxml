@@ -1,0 +1,353 @@
+<view class="page plan-detail-page {{actionState.actionsExpanded ? 'actions-open' : ''}}" wx:if="{{plan}}">
+  <!-- Recipient Invitation Banner -->
+  <view class="invite-banner-card card" wx:if="{{isRecipient}}">
+    <view class="invite-banner-header">
+      <view class="invite-banner-badge">📬 聚会出行邀请</view>
+      <view class="invite-status-tag {{plan.statusCode === 'confirmed' ? 'confirmed' : (plan.statusCode === 'cancelled' || plan.statusCode === 'rejected' ? 'rejected' : 'pending')}}">
+        {{plan.statusCode === 'confirmed' ? '🎉 你已接受' : (plan.statusCode === 'cancelled' || plan.statusCode === 'rejected' ? '已婉拒' : '待你确认')}}
+      </view>
+    </view>
+    <view class="invite-banner-title">
+      {{currentInvite.friendName || '好友'}} 发起了出行邀约，邀请你一起去体验！
+    </view>
+    <view class="invite-banner-desc">
+      活动：{{plan.title}} · {{plan.selectedTime.displayText}}
+    </view>
+  </view>
+
+  <view class="detail-hero card">
+    <view class="detail-status {{plan.statusClass}}">{{plan.status}}</view>
+    <view class="detail-title">{{plan.title}}</view>
+    <view class="detail-subtitle">{{plan.scheduleSummary}}</view>
+  </view>
+
+  <!-- 行动指引卡片 (支持行动：建议出发时间、路线导航、快捷延后与改期) -->
+  <view class="departure-action-card card" wx:if="{{plan.statusCode !== 'completed' && plan.statusCode !== 'cancelled'}}">
+    <view class="departure-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12rpx;">
+      <view style="display: flex; align-items: center; gap: 8rpx; font-size: 26rpx; font-weight: 700; color: var(--primary-color);">
+        <text>🚀</text> 出行行动建议
+      </view>
+      <view wx:if="{{plan.suggestDepartureTime}}" style="font-size: 22rpx; color: var(--text-secondary); background: rgba(15, 118, 110, 0.08); padding: 4rpx 14rpx; border-radius: 20rpx; font-weight: 600;">
+        建议 {{plan.suggestDepartureTime}} 出发
+      </view>
+    </view>
+    <view class="departure-body" style="font-size: 24rpx; color: var(--text-secondary); line-height: 1.45; margin-bottom: 16rpx;">
+      {{plan.departureAdvice}}
+    </view>
+    <view class="departure-actions" style="display: flex; gap: 12rpx; flex-wrap: wrap;">
+      <button class="btn btn-secondary compact" bindtap="openMapNavigation" style="flex: 1; min-width: 140rpx; font-size: 22rpx; height: 60rpx; line-height: 60rpx; border-radius: 30rpx;">
+        📍 路线导航
+      </button>
+      <button class="btn btn-secondary compact" wx:if="{{!isRecipient && actionState.canReschedule}}" bindtap="postponePlan" data-minutes="15" style="flex: 1; min-width: 140rpx; font-size: 22rpx; height: 60rpx; line-height: 60rpx; border-radius: 30rpx;">
+        ⏱️ 延后15分
+      </button>
+      <button class="btn btn-secondary compact" wx:if="{{!isRecipient && actionState.canReschedule}}" bindtap="postponePlan" data-minutes="30" style="flex: 1; min-width: 140rpx; font-size: 22rpx; height: 60rpx; line-height: 60rpx; border-radius: 30rpx;">
+        ⏱️ 延后30分
+      </button>
+      <button class="btn btn-secondary compact" wx:if="{{!isRecipient && actionState.canReschedule}}" bindtap="changeTime" style="flex: 1; min-width: 140rpx; font-size: 22rpx; height: 60rpx; line-height: 60rpx; border-radius: 30rpx;">
+        📅 更换时间
+      </button>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">核心信息</view>
+    </view>
+    <view class="info-card card">
+      <view class="info-row">
+        <view class="info-label">时间</view>
+        <view class="info-value">{{plan.selectedTime.displayText}}</view>
+      </view>
+      <view class="info-row {{plan.locationView.mapReady ? 'clickable' : ''}}" bindtap="openMapNavigation">
+        <view class="info-label">地点</view>
+        <view class="info-value" style="{{plan.locationView.mapReady ? 'color: var(--primary-color); font-weight: 500;' : ''}}">{{plan.locationText}} <text wx:if="{{plan.locationView.mapReady}}" style="font-size: 22rpx; margin-left: 6rpx; opacity: 0.85;">📍 导航</text></view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">路程</view>
+        <view class="info-value">单程{{plan.travelTime}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">预约</view>
+        <view class="info-value">{{plan.reservationText}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 社交协作与系统日历打通 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">协作与日程打通</view>
+      <view class="section-hint">跨设备分享 / 系统日历同步</view>
+    </view>
+    <view class="card" style="padding: 24rpx 28rpx; border-radius: 20rpx;">
+      <view style="display: flex; gap: 16rpx; flex-wrap: wrap;">
+        <button class="btn btn-primary compact" open-type="share" bindtap="prepareFriendInvite" style="flex: 1; min-width: 200rpx; font-size: 24rpx; height: 68rpx; line-height: 68rpx; border-radius: 34rpx; font-weight: 700;">
+          📤 发送微信卡片
+        </button>
+        <button class="btn btn-secondary compact" bindtap="copyInviteText" style="flex: 1; min-width: 200rpx; font-size: 24rpx; height: 68rpx; line-height: 68rpx; border-radius: 34rpx;">
+          📋 复制邀请口令
+        </button>
+        <button class="btn btn-secondary compact" bindtap="addToCalendar" style="flex: 1; min-width: 200rpx; font-size: 24rpx; height: 68rpx; line-height: 68rpx; border-radius: 34rpx;">
+          📅 写入系统日历
+        </button>
+        <button class="btn btn-secondary compact" bindtap="requestReminder" style="flex: 1; min-width: 200rpx; font-size: 24rpx; height: 68rpx; line-height: 68rpx; border-radius: 34rpx;">
+          🔔 微信到期提醒
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Trip Weather & Safety Advice -->
+  <view class="section" wx:if="{{plan.weatherView}}">
+    <view class="section-head">
+      <view class="section-title">行程气象</view>
+    </view>
+    <view class="detail-weather-card card {{plan.weatherView.weatherRisk ? 'risk' : ''}}">
+      <view class="detail-weather-top">
+        <view class="detail-weather-main">
+          <text class="detail-weather-icon">{{plan.weatherView.icon}}</text>
+          <view class="detail-weather-info">
+            <view class="detail-weather-title">{{plan.weatherView.condition}} · {{plan.weatherView.temperature}}</view>
+            <view class="detail-weather-desc">{{plan.weatherView.summary}}</view>
+          </view>
+        </view>
+        <view class="detail-weather-reschedule" wx:if="{{plan.weatherView.weatherRisk && !isRecipient && actionState.canReschedule}}" bindtap="reschedulePlan">
+          <text>换到晴天</text>
+        </view>
+      </view>
+
+      <!-- Risk warning bar if rainy for outdoor -->
+      <view class="detail-weather-risk-bar" wx:if="{{plan.weatherView.weatherRisk}}">
+        <text class="risk-icon">⚠️</text>
+        <text class="risk-text">{{plan.weatherView.riskText}}</text>
+      </view>
+
+      <!-- Weather Tips Chips -->
+      <view class="detail-weather-chips">
+        <view class="detail-weather-chip" wx:for="{{plan.weatherView.tips}}" wx:key="*this">{{item}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Timeline Block Section -->
+  <view class="section" wx:if="{{plan.timeBlock}}">
+    <view class="section-head">
+      <view class="section-title">完整时间占用轴</view>
+      <view class="section-hint">{{plan.timeBlock.totalText}}</view>
+    </view>
+    <view class="timeline-card card">
+      <view class="timeline-visual-bar">
+        <view class="segment prep" style="flex: {{plan.timeBlock.prepFlex}};">
+          <view class="segment-pill"></view>
+          <text class="segment-name">准备</text>
+        </view>
+        <view class="segment transit" style="flex: {{plan.timeBlock.goFlex}};">
+          <view class="segment-pill"></view>
+          <text class="segment-name">去程</text>
+        </view>
+        <view class="segment activity" style="flex: {{plan.timeBlock.actFlex}};">
+          <view class="segment-pill"></view>
+          <text class="segment-name">活动</text>
+        </view>
+        <view class="segment transit" style="flex: {{plan.timeBlock.backFlex}};">
+          <view class="segment-pill"></view>
+          <text class="segment-name">回程</text>
+        </view>
+        <view class="segment cleanup" style="flex: {{plan.timeBlock.cleanFlex}};" wx:if="{{plan.timeBlock.cleanTime > 0}}">
+          <view class="segment-pill"></view>
+          <text class="segment-name">清洁</text>
+        </view>
+        <view class="segment buffer" style="flex: {{plan.timeBlock.bufferFlex}};">
+          <view class="segment-pill"></view>
+          <text class="segment-name">缓冲</text>
+        </view>
+      </view>
+      
+      <view class="timeline-details">
+        <view class="detail-item">
+          <view class="detail-dot prep"></view>
+          <view class="detail-label">出门准备</view>
+          <view class="detail-value">{{plan.timeBlock.prepTime}}分钟</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-dot transit"></view>
+          <view class="detail-label">去程交通</view>
+          <view class="detail-value">{{plan.timeBlock.goText}}</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-dot activity"></view>
+          <view class="detail-label">活动项目 ({{plan.category || '用餐'}})</view>
+          <view class="detail-value">{{plan.timeBlock.actText}}</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-dot transit"></view>
+          <view class="detail-label">回程交通</view>
+          <view class="detail-value">{{plan.timeBlock.backText}}</view>
+        </view>
+        <view class="detail-item" wx:if="{{plan.timeBlock.cleanTime > 0}}">
+          <view class="detail-dot cleanup"></view>
+          <view class="detail-label">整理与清洁</view>
+          <view class="detail-value">{{plan.timeBlock.cleanTime}}分钟</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-dot buffer"></view>
+          <view class="detail-label">弹性缓冲</view>
+          <view class="detail-value">{{plan.timeBlock.bufferTime}}分钟</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Activity Logs Section -->
+  <view class="section" wx:if="{{plan.changeLogs && plan.changeLogs.length}}">
+    <view class="section-head">
+      <view class="section-title">计划动态</view>
+    </view>
+    <view class="list-card card">
+      <view class="change-log-row" wx:for="{{plan.changeLogs}}" wx:key="createdAt">
+        <view class="change-log-dot"></view>
+        <view class="change-log-content">
+          <view class="change-log-text">{{item.text}}</view>
+          <view class="change-log-time">{{item.createdAt}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">位置</view>
+    </view>
+    <view class="location-card card">
+      <map
+        wx:if="{{plan.locationView.mapReady}}"
+        class="location-map"
+        latitude="{{plan.locationView.latitude}}"
+        longitude="{{plan.locationView.longitude}}"
+        markers="{{plan.locationView.markers}}"
+        scale="15"
+        show-location="{{false}}"
+      />
+      <view wx:else class="location-fallback">
+        <view class="location-dot"></view>
+        <view class="location-copy">
+          <view class="location-name">{{plan.locationView.name}}</view>
+          <view class="location-address">{{plan.locationView.address}}</view>
+        </view>
+      </view>
+      <view class="route-row">
+        <view>
+          <view class="route-label">单程</view>
+          <view class="route-value">{{plan.locationView.distanceText}}</view>
+        </view>
+        <view class="route-hint">{{plan.locationView.mapReady ? '已保存地图点' : '可在券详情补点'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">参与</view>
+    </view>
+    <view class="participant-card card">
+      <view class="participant-row" wx:for="{{plan.participants}}" wx:key="id">
+        <view class="participant-name">{{item.name}}</view>
+        <view class="participant-status {{item.status}}">{{item.status === 'confirmed' ? '已确认' : item.status === 'rejected' ? '已拒绝' : '待确认'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">推荐依据</view>
+    </view>
+    <view class="list-card card">
+      <view class="reason-row" wx:for="{{plan.recommendationSnapshot.reasonItems}}" wx:key="desc">
+        <view class="reason-badge {{item.type || 'default'}}">{{item.label}}</view>
+        <view class="reason-text">
+          <view class="reason-desc">{{item.desc}}</view>
+        </view>
+      </view>
+      <view class="reason-row warning" wx:for="{{plan.recommendationSnapshot.warnings}}" wx:key="*this">
+        <view class="reason-badge warning">警告</view>
+        <view class="reason-text">
+          <view class="reason-desc">{{item}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">风险</view>
+    </view>
+    <view class="list-card card">
+      <view wx:if="{{!plan.liveRisk.hasRisk}}" class="reason-row safe">暂未发现新的执行风险</view>
+      <view class="risk-row {{item.level}}" wx:for="{{plan.liveRisk.messages}}" wx:key="type">{{item.text}}</view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{feedbackVisible}}">
+    <view class="section-head">
+      <view class="section-title">反馈</view>
+    </view>
+    <view class="feedback-card card">
+      <view class="rating-row">
+        <view class="rating-chip {{feedbackRating === 5 ? 'active' : ''}}" data-value="5" bindtap="selectFeedbackRating">合适</view>
+        <view class="rating-chip {{feedbackRating === 1 ? 'active bad' : ''}}" data-value="1" bindtap="selectFeedbackRating">不合适</view>
+      </view>
+      <view class="feedback-reasons">
+        <view class="feedback-chip {{item.selected ? 'active' : ''}}" wx:for="{{feedbackReasons}}" wx:key="label" data-label="{{item.label}}" bindtap="toggleFeedbackReason">{{item.label}}</view>
+      </view>
+      <textarea class="feedback-input" placeholder="可选：补充一点原因" value="{{feedbackComment}}" bindinput="onFeedbackComment" auto-height="true" />
+      <button class="btn btn-primary feedback-submit" bindtap="submitFeedback">保存反馈</button>
+    </view>
+  </view>
+
+  <!-- Recipient Dedicated Bottom Actions -->
+  <view class="bottom-actions recipient-bottom-actions" wx:if="{{isRecipient && plan.statusCode === 'pending'}}">
+    <button class="btn btn-primary action-accept" bindtap="acceptInvite">🎉 接受邀约</button>
+    <button class="btn btn-secondary action-reschedule" bindtap="recipientReschedule">📅 提议改期</button>
+    <button class="btn btn-ghost action-decline" bindtap="rejectInvite">婉拒</button>
+  </view>
+
+  <view class="bottom-actions compact" wx:elif="{{actionState.hasActions}}">
+    <view class="bottom-main-row">
+      <button
+        wx:if="{{actionState.primaryAction && actionState.primaryAction.share}}"
+        class="btn btn-primary action-primary"
+        open-type="share"
+        bindtap="prepareFriendInvite"
+      >{{actionState.primaryAction.label}}</button>
+      <button
+        wx:elif="{{actionState.primaryAction}}"
+        class="btn btn-primary action-primary"
+        data-action="{{actionState.primaryAction.action}}"
+        bindtap="handleActionTap"
+      >{{actionState.primaryAction.label}}</button>
+      
+      <!-- Swap logic: Show '取消计划' in main row if expanded, otherwise toggle More/Collapse -->
+      <button
+        class="btn action-danger-main"
+        data-action="cancelPlan"
+        bindtap="handleActionTap"
+        wx:if="{{actionState.actionsExpanded && actionState.expandedCancelAction}}"
+      >取消计划</button>
+      <button
+        class="action-more {{actionState.actionsExpanded ? 'active' : ''}}"
+        bindtap="toggleActions"
+        wx:elif="{{actionState.hasSecondaryActions}}"
+      >{{actionState.actionsExpanded ? '收起' : '更多'}}</button>
+    </view>
+    <view class="action-panel" wx:if="{{actionState.actionsExpanded}}">
+      <button
+        class="action-option {{item.danger ? 'danger' : ''}}"
+        wx:for="{{actionState.secondaryActions}}"
+        wx:key="action"
+        data-action="{{item.action}}"
+        bindtap="handleActionTap"
+      >{{item.label}}</button>
+    </view>
+  </view>
+</view>

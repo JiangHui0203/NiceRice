@@ -1,0 +1,892 @@
+/* ==========================================================================
+   Weather Card V2 - iOS Ambient Frosted Skylight (iOS 拟真毛玻璃天窗系统)
+   ========================================================================== */
+
+.weather-card-v2 {
+  overflow: hidden;
+  padding: 32rpx 34rpx 26rpx 34rpx;
+  position: relative;
+  border-radius: 36rpx;
+  border: 1.5rpx solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 20rpx 48rpx -6rpx var(--ambient-glow, rgba(16, 31, 66, 0.35)),
+    0 6rpx 16rpx rgba(0, 0, 0, 0.04),
+    inset 0 1.5rpx 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 32rpx rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  transition: box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.8s ease;
+  color: #ffffff !important;
+  min-height: 295rpx;
+  height: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: ambient-glow-pulse 6s infinite alternate ease-in-out;
+}
+
+/* 玻璃四周透镜羽化层：让雨丝、云朵、天体自然柔化融入边缘 */
+.weather-card-v2::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 54%,
+    rgba(255, 255, 255, 0.03) 78%,
+    rgba(255, 255, 255, 0.14) 100%
+  );
+  box-shadow: inset 0 0 24rpx rgba(255, 255, 255, 0.08);
+  z-index: 6;
+  transition: opacity 0.8s ease;
+}
+
+.weather-card-v2.is-night::after {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 54%,
+    rgba(15, 23, 42, 0.18) 78%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  box-shadow: inset 0 0 24rpx rgba(255, 255, 255, 0.05);
+}
+
+@keyframes ambient-glow-pulse {
+  0% {
+    box-shadow:
+      0 16rpx 40rpx -6rpx var(--ambient-glow, rgba(16, 31, 66, 0.28)),
+      0 6rpx 16rpx -4rpx rgba(0, 0, 0, 0.04),
+      inset 0 1.5rpx 0 0 rgba(255, 255, 255, 0.40),
+      inset 0 0 24rpx rgba(255, 255, 255, 0.06);
+  }
+  100% {
+    box-shadow:
+      0 26rpx 58rpx -4rpx var(--ambient-glow, rgba(16, 31, 66, 0.42)),
+      0 10rpx 24rpx -4rpx rgba(0, 0, 0, 0.06),
+      inset 0 1.5rpx 0 0 rgba(255, 255, 255, 0.52),
+      inset 0 0 36rpx rgba(255, 255, 255, 0.10);
+  }
+}
+
+/* Layer 2: Atmosphere overlay mask */
+.weather-overlay-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.8s ease;
+}
+.weather-overlay-v2.day-mask {
+  background: radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0%, transparent 70%);
+}
+.weather-overlay-v2.night-mask {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.06) 0%, transparent 60%);
+}
+
+/* Layer 3: Celestial Layer */
+.celestial-layer-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Sun glow & body (暖阳金芒、日冕与炽热光晕系统) */
+.sun-glow-v2 {
+  position: absolute;
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.6) 0%, rgba(251, 191, 36, 0.35) 28%, rgba(245, 158, 11, 0.15) 55%, transparent 75%);
+  filter: blur(14rpx);
+  animation: sun-pulse-v2 6s infinite alternate ease-in-out;
+}
+.sun-body-v2 {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.5s ease;
+}
+/* 日间晴朗/多云：暖金炽阳 (白炽日核 + 阳光金轮 + 琥珀日冕) */
+.sun-body-v2.white {
+  background: radial-gradient(circle at 38% 35%, #ffffff 0%, #fffbeb 20%, #fef08a 52%, #fcd34d 78%, #f59e0b 100%);
+  box-shadow:
+    0 0 28rpx rgba(254, 240, 138, 0.95),
+    0 0 65rpx rgba(251, 191, 36, 0.65),
+    0 0 110rpx rgba(245, 158, 11, 0.35);
+}
+/* 清晨晨光：温柔香槟金阳 */
+.sun-body-v2.gold {
+  background: radial-gradient(circle at 38% 35%, #ffffff 0%, #fef3c7 25%, #fde047 55%, #fbbf24 82%, #f97316 100%);
+  box-shadow:
+    0 0 32rpx rgba(253, 224, 71, 0.95),
+    0 0 75rpx rgba(251, 146, 60, 0.65),
+    0 0 120rpx rgba(249, 115, 22, 0.35);
+}
+/* 傍晚落日：绚丽晚霞金橘夕阳 */
+.sun-body-v2.orange {
+  background: radial-gradient(circle at 38% 35%, #fff7ed 0%, #fde68a 20%, #fb923c 55%, #ea580c 85%, #c2410c 100%);
+  box-shadow:
+    0 0 35rpx rgba(251, 146, 60, 0.95),
+    0 0 85rpx rgba(234, 88, 12, 0.7),
+    0 0 135rpx rgba(194, 65, 12, 0.4);
+}
+
+@keyframes sun-pulse-v2 {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.55; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.85; }
+}
+
+/* ========================================================
+   Full Moon Easter Egg: Real Silhouette Bunny (真实剪影贴月奔跑玉兔)
+   ======================================================== */
+.moon-rabbit-orbit-track {
+  position: absolute;
+  width: 76rpx;
+  height: 76rpx;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 6;
+  animation: moon-rabbit-orbit 16s infinite linear;
+}
+
+/* 兔子运行容器：沿月球圆弧切线前倾 */
+.moon-rabbit-container {
+  position: absolute;
+  top: -40rpx;
+  left: 50%;
+  width: 44rpx;
+  height: 55rpx;
+  overflow: hidden;
+  transform: translate(-50%, 0) rotate(10deg);
+  filter: drop-shadow(0 0 2rpx rgba(254, 240, 138, 0.9)) drop-shadow(0 0 5rpx rgba(253, 224, 71, 0.45));
+}
+
+/* 15 个同向连续动作帧 + 1 个循环闭合帧；合成层动画不触发 setData */
+.real-lunar-bunny {
+  display: block;
+  width: 704rpx;
+  height: 55rpx;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  animation: lunar-rabbit-frames 1.2s steps(15, end) infinite;
+}
+
+@keyframes lunar-rabbit-frames {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-660rpx, 0, 0); }
+}
+
+/* 紧贴月表 360° 环绕公转轨迹 */
+@keyframes moon-rabbit-orbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ========================================================
+   Moon V2: Ethereal Luminous Moon (纯净温润皎洁月亮)
+   ======================================================== */
+.moon-body-v2 {
+  position: absolute;
+  width: 70rpx;
+  height: 70rpx;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 0.5s ease, width 0.4s ease, height 0.4s ease;
+  overflow: hidden;
+  /* 暗月基底。亮面由半球和椭圆终止线连续组合。 */
+  background: radial-gradient(circle at 42% 38%, #17213a 0%, #0b1329 72%, #060b18 100%);
+  box-shadow:
+    inset -2rpx -2rpx 6rpx rgba(3, 7, 18, 0.4),
+    0 0 14rpx rgba(226, 232, 240, 0.34),
+    0 0 32rpx rgba(191, 219, 254, 0.14);
+}
+
+.moon-body-v2.full {
+  box-shadow:
+    inset -2rpx -2rpx 6rpx rgba(100, 116, 139, 0.12),
+    0 0 20rpx rgba(241, 245, 249, 0.72),
+    0 0 46rpx rgba(191, 219, 254, 0.24);
+}
+
+/* 月面地表层 (若隐若现的月影微纱) */
+.moon-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 极淡柔焦月影 (透明度仅 6%~8%，完全不抢戏，唯美纯净) */
+.moon-mare {
+  position: absolute;
+  background: rgba(71, 85, 105, 0.12);
+  filter: blur(5rpx);
+  pointer-events: none;
+}
+
+.moon-mare.mare-1 {
+  width: 40rpx;
+  height: 32rpx;
+  top: 20%;
+  right: 15%;
+  border-radius: 50%;
+}
+
+.moon-mare.mare-2 {
+  width: 28rpx;
+  height: 24rpx;
+  bottom: 22%;
+  left: 22%;
+  border-radius: 50%;
+}
+
+/* 隐藏硬斑坑洞，保持纯粹干净 */
+.moon-crater {
+  display: none;
+}
+
+/* 3. 连续月相几何
+   暗月为基底；盈亏侧半球提供 50% 亮面；椭圆终止线根据照明比例
+   从 0~1 连续缩放，因此月牙、弦月、凸月之间不再发生跳变。 */
+.moon-light-half {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.moon-light-half.left {
+  left: 0;
+}
+
+.moon-light-half.right {
+  right: 0;
+}
+
+.moon-light-disk {
+  position: absolute;
+  top: 0;
+  width: 200%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f4f7fb 46%, #dbe4ef 78%, #b8c6d8 100%);
+}
+
+.moon-light-half.left .moon-light-disk {
+  left: 0;
+}
+
+.moon-light-half.right .moon-light-disk {
+  left: -100%;
+}
+
+.moon-terminator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform-origin: 50% 50%;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.moon-terminator.dark {
+  background: radial-gradient(circle at 42% 38%, #17213a 0%, #0b1329 72%, #060b18 100%);
+}
+
+.moon-terminator.light {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f4f7fb 46%, #dbe4ef 78%, #b8c6d8 100%);
+}
+
+/* 4. 月晕 */
+.moon-halo-v2 {
+  position: absolute;
+  width: 175rpx;
+  height: 175rpx;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(226, 232, 240, 0.3) 0%, rgba(191, 219, 254, 0.1) 45%, transparent 70%);
+  filter: blur(16rpx);
+  pointer-events: none;
+  animation: moon-halo-pulse 5s infinite alternate ease-in-out;
+}
+
+@keyframes moon-halo-pulse {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.45; }
+  100% { transform: translate(-50%, -50%) scale(1.16); opacity: 0.85; }
+}
+
+/* Stars twinkling v2 */
+.stars-container-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.star-particle-v2 {
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 12rpx #ffffff, 0 0 24rpx rgba(255, 255, 255, 0.9);
+}
+
+.star-1-v2 { top: 18%; left: 18%; width: 9rpx; height: 9rpx; animation: star-breath 3.2s infinite ease-in-out 0.2s; }
+.star-2-v2 { top: 28%; left: 78%; width: 7rpx; height: 7rpx; animation: star-breath 4.1s infinite ease-in-out 1.2s; }
+.star-3-v2 { top: 46%; left: 42%; width: 8rpx; height: 8rpx; animation: star-breath 3.6s infinite ease-in-out 2.1s; }
+.star-4-v2 { top: 22%; left: 54%; width: 6rpx; height: 6rpx; animation: star-breath 4.8s infinite ease-in-out 3.0s; }
+.star-5-v2 { top: 12%; left: 88%; width: 8rpx; height: 8rpx; animation: star-breath 3.9s infinite ease-in-out 0.8s; }
+.star-6-v2 { top: 40%; left: 12%; width: 7rpx; height: 7rpx; animation: star-breath 4.4s infinite ease-in-out 1.7s; }
+
+@keyframes star-breath {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 1.0; transform: scale(1.4); }
+}
+
+/* Layer 4: Cloud Layer */
+.cloud-layer-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.cloud-puff-v2 {
+  position: absolute;
+  border-radius: 100rpx;
+  background: #ffffff;
+  animation: cloud-drift-v2 linear infinite;
+  filter: blur(4px);
+  box-shadow: inset 0 -4rpx 12rpx rgba(0, 0, 0, 0.03);
+  left: -380rpx;
+}
+
+.cloud-puff-v2::before {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+  width: var(--b-size, 60rpx);
+  height: var(--b-size, 60rpx);
+  top: var(--b-top, -30rpx);
+  left: var(--b-left, 30rpx);
+}
+
+.cloud-puff-v2::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+  width: var(--a-size, 44rpx);
+  height: var(--a-size, 44rpx);
+  top: var(--a-top, -20rpx);
+  right: var(--a-right, 36rpx);
+}
+
+.cloud-puff-v2.gray {
+  background: #c8d2e6 !important;
+}
+
+.cloud-puff-v2.dark {
+  background: #2d3748 !important;
+}
+
+.weather-card-v2.is-night .cloud-puff-v2.gray {
+  background: #1b263b !important;
+}
+
+.weather-card-v2.is-night .cloud-puff-v2.dark {
+  background: #0d1522 !important;
+}
+
+.weather-card-v2.is-night .cloud-puff-v2.white {
+  background: rgba(215, 230, 255, 0.25) !important;
+}
+
+@keyframes cloud-drift-v2 {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(1150rpx); }
+}
+
+/* Layer 5: 透明全景天气粒子外溢层 (覆盖从屏幕顶端到快捷入口下方，特效大范围自如飞舞) */
+.weather-spill-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 580rpx;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.weather-canvas-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 4;
+}
+
+.lightning-overlay-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  animation: lightning-flash-bg-v2 5s infinite ease-in-out;
+}
+
+.lightning-bolt-v2 {
+  position: absolute;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 14rpx rgba(255, 255, 255, 0.95));
+  will-change: transform, opacity;
+}
+
+.lightning-bolt-1-v2 {
+  top: 5rpx;
+  right: 32%;
+  width: 80rpx;
+  height: 160rpx;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 80' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 2 L12 25 L24 45 L10 76'/><path d='M18 35 L32 50 L26 62' stroke-width='1.2' opacity='0.8'/><path d='M12 25 L4 35 L2 45' stroke-width='1' opacity='0.6'/></svg>");
+  animation: bolt-strike-v2 5s infinite ease-out;
+}
+
+.lightning-bolt-2-v2 {
+  top: 10rpx;
+  left: 15%;
+  width: 60rpx;
+  height: 120rpx;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 60' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M18 2 L10 20 L20 38 L8 56'/><path d='M10 20 L4 28 L2 35' stroke-width='1' opacity='0.6'/></svg>");
+  animation: bolt-strike-v2-delay-1 6.5s infinite ease-out;
+}
+
+.lightning-bolt-3-v2 {
+  top: 15rpx;
+  right: 12%;
+  width: 50rpx;
+  height: 100rpx;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 60' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M18 2 L10 20 L20 38 L8 56'/><path d='M10 20 L4 28 L2 35' stroke-width='1' opacity='0.6'/></svg>");
+  animation: bolt-strike-v2-delay-2 8s infinite ease-out;
+}
+
+.lightning-bolt-4-v2 {
+  top: 8rpx;
+  left: 38%;
+  width: 70rpx;
+  height: 140rpx;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 80' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 2 L12 25 L24 45 L10 76'/><path d='M18 35 L32 50 L26 62' stroke-width='1.2' opacity='0.8'/><path d='M12 25 L4 35 L2 45' stroke-width='1' opacity='0.6'/></svg>");
+  animation: bolt-strike-v2-delay-3 5.8s infinite ease-out;
+}
+
+@keyframes lightning-flash-bg-v2 {
+  0%, 81%, 85%, 89%, 93%, 97%, 100% { opacity: 0; }
+  82% { opacity: 0.45; }
+  84% { opacity: 0.08; }
+  87% { opacity: 0.55; }
+  89% { opacity: 0.12; }
+  91% { opacity: 0.35; }
+}
+
+@keyframes bolt-strike-v2 {
+  0%, 81%, 85%, 89%, 93%, 97%, 100% { opacity: 0; transform: scale(0.9) translate3d(0, 0, 0); }
+  82% { opacity: 1; transform: scale(1.1) translate3d(-5rpx, 0, 0); }
+  84% { opacity: 0.2; transform: scale(0.95) translate3d(0, 0, 0); }
+  87% { opacity: 1; transform: scale(1.15) translate3d(5rpx, 0, 0); }
+  89% { opacity: 0.25; transform: scale(0.98) translate3d(0, 0, 0); }
+  91% { opacity: 0.85; transform: scale(1.05) translate3d(-3rpx, 0, 0); }
+}
+
+@keyframes bolt-strike-v2-delay-1 {
+  0%, 75%, 79%, 83%, 87%, 91%, 100% { opacity: 0; transform: scale(-0.9, 0.9) translate3d(0, 0, 0); }
+  76% { opacity: 1; transform: scale(-1.1, 1.1) translate3d(5rpx, 0, 0); }
+  78% { opacity: 0.2; transform: scale(-0.95, 0.95) translate3d(0, 0, 0); }
+  81% { opacity: 1; transform: scale(-1.15, 1.15) translate3d(-5rpx, 0, 0); }
+  83% { opacity: 0.25; transform: scale(-0.98, 0.98) translate3d(0, 0, 0); }
+  85% { opacity: 0.85; transform: scale(-1.05, 1.05) translate3d(3rpx, 0, 0); }
+}
+
+@keyframes bolt-strike-v2-delay-2 {
+  0%, 83%, 87%, 91%, 95%, 99%, 100% { opacity: 0; transform: scale(0.9) translate3d(0, 0, 0); }
+  84% { opacity: 1; transform: scale(1.1) translate3d(-4rpx, 0, 0); }
+  86% { opacity: 0.2; transform: scale(0.95) translate3d(0, 0, 0); }
+  89% { opacity: 1; transform: scale(1.12) translate3d(4rpx, 0, 0); }
+  91% { opacity: 0.25; transform: scale(0.98) translate3d(0, 0, 0); }
+  93% { opacity: 0.85; transform: scale(1.03) translate3d(-2rpx, 0, 0); }
+}
+
+@keyframes bolt-strike-v2-delay-3 {
+  0%, 78%, 82%, 86%, 90%, 94%, 100% { opacity: 0; transform: scale(-0.9, 0.9) rotate(-8deg) translate3d(0, 0, 0); }
+  79% { opacity: 1; transform: scale(-1.1, 1.1) rotate(-8deg) translate3d(4rpx, 0, 0); }
+  81% { opacity: 0.2; transform: scale(-0.95, 0.95) rotate(-8deg) translate3d(0, 0, 0); }
+  84% { opacity: 1; transform: scale(-1.15, 1.15) rotate(-8deg) translate3d(-4rpx, 0, 0); }
+  86% { opacity: 0.25; transform: scale(-0.98, 0.98) rotate(-8deg) translate3d(0, 0, 0); }
+  88% { opacity: 0.85; transform: scale(-1.05, 1.05) rotate(-8deg) translate3d(2rpx, 0, 0); }
+}
+
+/* Layer 6: Atmosphere layers */
+.atmosphere-layer-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.fog-overlay-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  filter: blur(8px);
+}
+
+.weather-card-v2.is-night .fog-overlay-v2 {
+  background: radial-gradient(circle at 65% 35%, rgba(180, 210, 255, 0.12) 0%, rgba(8, 16, 32, 0.52) 80%) !important;
+}
+
+.haze-overlay-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.haze-overlay-v2.gray {
+  background: rgba(100, 110, 120, 0.2);
+}
+
+.haze-overlay-v2.yellowGray {
+  background: rgba(140, 130, 100, 0.25);
+}
+
+.weather-card-v2.is-night .haze-overlay-v2 {
+  background: rgba(18, 22, 32, 0.45) !important;
+}
+
+.ice-border-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 35rpx rgba(224, 242, 254, 0.8), inset 0 0 15rpx rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+.ice-border-v2.frost::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.45) 0%, rgba(186, 230, 253, 0.25) 30%, transparent 60%),
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.45) 0%, rgba(186, 230, 253, 0.25) 30%, transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.45) 0%, rgba(186, 230, 253, 0.25) 30%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.45) 0%, rgba(186, 230, 253, 0.25) 30%, transparent 60%);
+  opacity: 0.55;
+}
+
+.heat-wave-v2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 30%, rgba(254, 215, 170, 0.35) 0%, rgba(249, 115, 22, 0.2) 50%, transparent 85%);
+  animation: heatwave-shimmer-v2 3s infinite alternate ease-in-out;
+}
+
+@keyframes heatwave-shimmer-v2 {
+  0% { transform: scale(1.0); opacity: 0.5; filter: blur(2px); }
+  100% { transform: scale(1.08); opacity: 0.95; filter: blur(4px) hue-rotate(15deg); }
+}
+
+/* Volumetric Fog mist drifts v2 */
+.fog-mist-layer-v2 {
+  position: absolute;
+  left: -80rpx;
+  width: 120%;
+  height: 54rpx;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  filter: blur(10px);
+  -webkit-filter: blur(10px);
+  pointer-events: none;
+  z-index: 6;
+  border-radius: 40%;
+}
+
+.mist-1-v2 {
+  top: 22%;
+  opacity: 0.28;
+  animation: mist-drift-left-v2 22s infinite linear;
+}
+
+.mist-2-v2 {
+  top: 52%;
+  opacity: 0.24;
+  animation: mist-drift-right-v2 30s infinite linear;
+}
+
+.mist-3-v2 {
+  top: 74%;
+  opacity: 0.18;
+  animation: mist-drift-left-v2 36s infinite linear;
+}
+
+@keyframes mist-drift-left-v2 {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(60rpx); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes mist-drift-right-v2 {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-60rpx); }
+  100% { transform: translateX(0); }
+}
+
+/* Layer 7: Info card layers */
+.ios-weather-grid-v2 {
+  display: flex;
+  justify-content: space-between;
+  z-index: 7;
+}
+
+.ios-weather-left-v2 {
+  text-align: left;
+}
+
+.ios-weather-main-title-v2 {
+  font-size: 38rpx;
+  font-weight: 800;
+  letter-spacing: -0.5rpx;
+  line-height: 1.15;
+}
+
+.ios-weather-loc-v2 {
+  font-size: 28rpx;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.ios-weather-status-v2 {
+  font-size: 23rpx;
+  font-weight: 400;
+  margin-top: 8rpx;
+  opacity: 0.9;
+  max-width: 400rpx;
+  line-height: 1.35;
+}
+
+.ios-weather-right-v2 {
+  text-align: right;
+}
+
+.ios-weather-temp-v2 {
+  font-size: 68rpx;
+  font-weight: 200;
+  line-height: 1;
+}
+
+.ios-weather-range-v2 {
+  font-size: 20rpx;
+  opacity: 0.75;
+  margin-top: 4rpx;
+}
+
+.ios-weather-tags-v2 {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+  margin-top: 18rpx;
+  z-index: 7;
+}
+
+.glass-tag-v2 {
+  padding: 6rpx 18rpx;
+  border-radius: 100rpx;
+  font-size: 21rpx;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 1rpx 1rpx rgba(255, 255, 255, 0.40);
+  border: 1rpx solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  letter-spacing: 0.3rpx;
+  transition: all 0.3s ease;
+}
+
+/* Extreme Weather Alert Banner (Compact Notice Bar Style with slide transition) */
+.extreme-warning-banner-v2 {
+  margin: 0 24rpx;
+  padding: 0 24rpx;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  box-sizing: border-box;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  border: 0rpx solid transparent;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s ease,
+              margin-top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              padding-top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              padding-bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-width 0.3s ease;
+}
+
+.extreme-warning-banner-v2.is-visible {
+  margin-top: 16rpx;
+  padding-top: 12rpx;
+  padding-bottom: 12rpx;
+  max-height: 240rpx;
+  opacity: 1;
+}
+
+.extreme-warning-banner-v2.warning.is-visible {
+  background: rgba(255, 149, 0, 0.08);
+  border: 1.5rpx solid rgba(255, 149, 0, 0.18);
+}
+.extreme-warning-banner-v2.warning.is-visible .warning-icon-v2 {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2L1 21h22L12 2z' fill='%23d97706'/><path d='M11 9h2v5h-2V9zm0 7h2v2h-2v-2z' fill='%23ffffff'/></svg>");
+}
+.extreme-warning-banner-v2.warning .warning-desc-v2 {
+  color: #d97706;
+}
+
+.extreme-warning-banner-v2.danger.is-visible {
+  background: rgba(255, 59, 48, 0.08);
+  border: 1.5rpx solid rgba(255, 59, 48, 0.18);
+}
+.extreme-warning-banner-v2.danger.is-visible .warning-icon-v2 {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2L1 21h22L12 2z' fill='%23ff3b30'/><path d='M11 9h2v5h-2V9zm0 7h2v2h-2v-2z' fill='%23ffffff'/></svg>");
+}
+.extreme-warning-banner-v2.danger .warning-desc-v2 {
+  color: #ff3b30;
+}
+
+.warning-icon-v2 {
+  width: 38rpx;
+  height: 38rpx;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.warning-content-v2 {
+  flex: 1;
+  overflow: hidden;
+}
+
+.warning-desc-v2 {
+  font-size: 22rpx;
+  line-height: 1.4;
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-all;
+}
+
+/* Dynamic Air Quality Badge (Glass Pill) */
+.weather-aqi-badge-v2 {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+  font-size: 18rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+  text-align: center;
+  box-sizing: border-box;
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06), inset 0 1rpx 1rpx rgba(255, 255, 255, 0.35);
+}
+
+.weather-aqi-badge-v2.excellent {
+  background: rgba(46, 204, 113, 0.28) !important;
+  border: 1rpx solid rgba(46, 204, 113, 0.45);
+}
+
+.weather-aqi-badge-v2.good {
+  background: rgba(241, 196, 15, 0.28) !important;
+  border: 1rpx solid rgba(241, 196, 15, 0.45);
+}
+
+.weather-aqi-badge-v2.poor {
+  background: rgba(230, 126, 34, 0.28) !important;
+  border: 1rpx solid rgba(230, 126, 34, 0.45);
+}
+
+/* Performance Saving: release every animated/composited descendant while hidden. */
+.weather-card-v2.is-paused,
+.weather-card-v2.is-paused view,
+.weather-card-v2.is-paused text,
+.weather-card-v2.is-paused image,
+.weather-card-v2.is-paused canvas,
+.weather-card-v2.is-paused button,
+.weather-card-v2.is-paused scroll-view {
+  animation-play-state: paused !important;
+  will-change: auto !important;
+}

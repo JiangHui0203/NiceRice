@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Weather Drawer V2 - Control Panel & Customization Sheet Styles
+   ========================================================================== */
+
+.weather-drawer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.weather-drawer-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.weather-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: #ffffff;
+  border-radius: 36rpx 36rpx 0 0;
+  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.12);
+  z-index: 1001;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)) 24rpx;
+  box-sizing: border-box;
+}
+
+.weather-drawer.show {
+  transform: translateY(0);
+}
+
+.drawer-drag-handle {
+  width: 64rpx;
+  height: 6rpx;
+  background: #e2e8f0;
+  border-radius: 3rpx;
+  margin: 0 auto 16rpx;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.drawer-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.drawer-close {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 22rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-v2-scroll {
+  max-height: 520rpx;
+  box-sizing: border-box;
+  padding: 6rpx 0;
+}
+
+.drawer-section {
+  margin-bottom: 20rpx;
+  padding: 0 4rpx;
+}
+
+.weather-drawer .section-title {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin-bottom: 12rpx;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18rpx;
+  color: #8e8e93;
+  padding: 0 16rpx;
+  margin-top: 4rpx;
+}
+
+.condition-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.condition-btn-v2 {
+  padding: 16rpx 0;
+  text-align: center;
+  font-size: 23rpx;
+  font-weight: 500;
+  border-radius: 16rpx;
+  color: #1c1c1e;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1.5rpx solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.condition-btn-v2.active {
+  background: #007aff !important;
+  color: #ffffff !important;
+  border-color: #007aff !important;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.2);
+}
+
+.modifiers-wrap-v2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.modifier-chip-v2 {
+  padding: 10rpx 22rpx;
+  font-size: 21rpx;
+  font-weight: 500;
+  border-radius: 100rpx;
+  color: #3a3a3c;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1.5rpx solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.modifier-chip-v2.active {
+  background: #34c759 !important;
+  color: #ffffff !important;
+  border-color: #34c759 !important;
+  box-shadow: 0 4rpx 12rpx rgba(52, 199, 89, 0.18);
+}
+
+.drawer-theme-tabs-v2 {
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  padding: 8rpx 0;
+  margin-bottom: 8rpx;
+  height: 72rpx;
+}
+
+.drawer-theme-tab-btn-v2 {
+  display: inline-block;
+  padding: 10rpx 24rpx;
+  margin-right: 16rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+  border-radius: 100rpx;
+  color: #4a4a4c;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1.5rpx solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  height: 52rpx;
+  line-height: 32rpx;
+  box-sizing: border-box;
+}
+
+.drawer-theme-tab-btn-v2.active {
+  background: #007aff !important;
+  color: #ffffff !important;
+  border-color: #007aff !important;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.2);
+}
+
+.drawer-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.drawer-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-btn-reset {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.drawer-btn-submit {
+  background: var(--primary-color, #3aafa9);
+  color: #ffffff;
+}

@@ -1,0 +1,184 @@
+<view class="page plan-page">
+  <view class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; padding-right: 16rpx;">
+    <view class="page-title">计划</view>
+    <view class="header-action" bindtap="goCompletedHistory" style="font-size: 26rpx; color: var(--primary-color); font-weight: 600; padding: 10rpx 0;">已完成历史 ></view>
+  </view>
+
+  <view class="summary-row">
+    <view class="summary-card card" wx:for="{{summary}}" wx:key="label" bindtap="onSummaryCardTap" data-label="{{item.label}}" hover-class="ios-hover">
+      <view class="summary-value">{{item.value}}</view>
+      <view class="summary-label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="wheel-entry card" bindtap="goFoodWheel" hover-class="ios-hover">
+    <view class="wheel-visual-badge">
+      <view class="mini-wheel-disc">
+        <view class="mini-wheel-center"></view>
+      </view>
+      <view class="mini-wheel-pointer"></view>
+    </view>
+    <view class="wheel-entry-main">
+      <view class="wheel-entry-kicker">转盘决策</view>
+      <view class="wheel-entry-title">今天吃啥</view>
+      <view class="wheel-entry-desc">{{wheelSummary.enabled || 0}} 项备选 · 随机抽签开转</view>
+    </view>
+    <view class="wheel-entry-action">开始</view>
+  </view>
+
+  <!-- 好友出行空档热力图 Banner 入口 -->
+  <navigator class="wheel-entry card" url="/pages/friend-heatmap/index" style="margin-top: 16rpx; margin-bottom: 24rpx;" hover-class="ios-hover">
+    <view class="heatmap-visual-badge">
+      <view class="mini-heatmap-grid">
+        <view class="mini-grid-cell active"></view>
+        <view class="mini-grid-cell hot"></view>
+        <view class="mini-grid-cell"></view>
+        <view class="mini-grid-cell hot"></view>
+        <view class="mini-grid-cell super"></view>
+        <view class="mini-grid-cell active"></view>
+        <view class="mini-grid-cell"></view>
+        <view class="mini-grid-cell active"></view>
+        <view class="mini-grid-cell hot"></view>
+      </view>
+    </view>
+    <view class="wheel-entry-main">
+      <view class="wheel-entry-kicker">社交协同</view>
+      <view class="wheel-entry-title">好友可约空档</view>
+      <view class="wheel-entry-desc">查看多好友时间交集，匹配聚餐好券</view>
+    </view>
+    <view class="wheel-entry-action">查看</view>
+  </navigator>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">日程</view>
+      <view class="section-action" bindtap="goScheduleSettings">避会</view>
+    </view>
+
+    <!-- iOS 正在筛选提示条 -->
+    <view class="filter-badge-bar card" wx:if="{{filterType}}" style="display: flex; justify-content: space-between; align-items: center; padding: 16rpx 24rpx; background: rgba(58, 175, 169, 0.05); margin-bottom: 24rpx; border-radius: 12rpx; border: 1rpx solid rgba(58, 175, 169, 0.1);">
+      <view style="font-size: 24rpx; color: var(--primary-color); font-weight: 500;">
+        正在筛选：{{filterType === 'pending' ? '待确认' : '有风险'}}的计划
+      </view>
+      <view bindtap="clearFilter" style="font-size: 24rpx; color: var(--text-secondary); font-weight: bold; padding: 4rpx 12rpx;">
+        清除 ×
+      </view>
+    </view>
+
+    <view class="segmented-control" style="margin-bottom: 14rpx;">
+      <view class="segmented-item {{activeTab === 'active' ? 'active' : ''}}" bindtap="switchTab" data-tab="active">进行中</view>
+      <view class="segmented-item {{activeTab === 'completed' ? 'active' : ''}}" bindtap="switchTab" data-tab="completed">已完成</view>
+      <view class="segmented-item {{activeTab === 'cancelled' ? 'active' : ''}}" bindtap="switchTab" data-tab="cancelled">已取消</view>
+    </view>
+
+    <view class="timeline">
+      <view wx:if="{{!plans.length}}" class="empty-card card" style="text-align: center; padding: 32rpx 24rpx; border-radius: 20rpx; background: rgba(255,255,255,0.9); border: 1rpx solid rgba(0,0,0,0.04);">
+        <view style="font-size: 52rpx; line-height: 1; margin-bottom: 12rpx;">
+          {{activeTab === 'completed' ? '🏆' : activeTab === 'cancelled' ? '🕊️' : '📅'}}
+        </view>
+        <view class="empty-title" style="font-size: 27rpx; font-weight: 700; color: var(--text-main); margin-bottom: 8rpx;">
+          {{activeTab === 'completed' ? '暂无聚餐记录' : activeTab === 'cancelled' ? '暂无取消日程' : '暂无就餐计划'}}
+        </view>
+        <view class="empty-desc" style="font-size: 22rpx; color: var(--text-muted); line-height: 1.3; white-space: nowrap; margin: 0 auto {{activeTab === 'active' ? '20rpx' : '4rpx'}};">
+          {{activeTab === 'completed' ? '打卡完成的美好聚餐记录，会在这里留存' : activeTab === 'cancelled' ? '所有计划都在顺利推进中，暂无取消日程' : '可从下方智能推荐一键安排，或从券包自选'}}
+        </view>
+        <view style="display: flex; justify-content: center; gap: 14rpx; flex-wrap: wrap;" wx:if="{{activeTab === 'active'}}">
+          <button class="btn btn-secondary compact" bindtap="goFoodWheel" style="font-size: 22rpx; height: 56rpx; line-height: 56rpx; padding: 0 24rpx; border-radius: 28rpx;">🎲 今天吃啥转盘</button>
+          <button class="btn btn-primary compact" bindtap="goCoupons" style="font-size: 22rpx; height: 56rpx; line-height: 56rpx; padding: 0 28rpx; border-radius: 28rpx; font-weight: 700;">前往券包挑选</button>
+        </view>
+      </view>
+      <view class="plan-card card {{item.statusClass}} theme-{{index % 2}}" wx:for="{{plans}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" hover-class="ios-hover">
+        <!-- 左侧时间列：日期 + 星期 + 超醒目大时间 -->
+        <view class="time-col">
+          <view class="plan-date-row">
+            <text class="plan-date-text">{{item.displayDate}}</text>
+            <text class="plan-weekday-badge">{{item.displayWeekday}}</text>
+          </view>
+          <view class="plan-time-main">{{item.displayTime}}</view>
+        </view>
+        
+        <!-- 右侧卡片主体：3行严格网格对齐 -->
+        <view class="plan-body">
+          <!-- 行1：标题 + 状态标签 -->
+          <view class="plan-head">
+            <view class="plan-title">{{item.title}}</view>
+            <view class="plan-status {{item.statusClass}}">{{item.status}}</view>
+          </view>
+
+          <!-- 行2：门店定位与距离（KM） -->
+          <view class="plan-venue-row">
+            <text class="venue-icon">📍</text>
+            <text class="venue-text">{{item.venueName}} · {{item.distKm}}</text>
+          </view>
+
+          <!-- 行3：网格对齐元数据（人数固定宽、路程固定宽）+ 打卡操作 -->
+          <view class="plan-meta-row">
+            <view class="plan-meta-grid">
+              <view class="meta-slot people">
+                <text class="slot-emoji">{{item.isSingle ? '👤' : '👥'}}</text>
+                <text class="slot-text">{{item.peopleShort}}</text>
+              </view>
+              <view class="meta-slot commute">
+                <text class="slot-emoji">🚗</text>
+                <text class="slot-text">{{item.commuteShort}}</text>
+              </view>
+              <view class="meta-slot warning" wx:if="{{item.needReservation && item.reservationStatus !== 'confirmed'}}">
+                <text class="slot-text">需预约</text>
+              </view>
+            </view>
+            <view class="quick-complete-btn" wx:if="{{activeTab === 'active' && item.canQuickComplete}}" catchtap="quickCompletePlan" data-id="{{item.id}}">打卡</view>
+          </view>
+
+          <!-- 实时风险提示 -->
+          <view class="plan-risk" wx:if="{{item.liveRisk && item.liveRisk.hasRisk}}">
+            <text class="risk-icon">⚠️</text>
+            <text class="risk-msg">{{item.liveRisk.messages[0].text}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自动排程建议栏目（放在我的日程下方） -->
+  <view class="section" wx:if="{{weeklyCoupons.length}}">
+    <view class="section-head">
+      <view class="section-title">智能排程建议</view>
+      <view class="section-action" bindtap="addWeeklyAll">一键加入</view>
+    </view>
+    <view class="weekly-plan-card card">
+      <view class="weekly-plan-row" wx:for="{{weeklyCoupons}}" wx:key="couponId">
+        <view class="weekly-plan-time">
+          <text class="weekly-time-day">{{item.planTime.weekday}}</text>
+          <text class="weekly-time-scene">{{item.planTime.scene}}</text>
+        </view>
+        <view class="weekly-plan-body">
+          <view class="weekly-plan-title">{{item.title}}</view>
+        </view>
+        <view class="weekly-plan-btn" catchtap="addWeeklyItem" data-id="{{item.couponId}}">查看</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{riskSummary}}">
+    <view class="section-head">
+      <view class="section-title">冲突</view>
+    </view>
+    <view class="risk-card card">
+      <view class="risk-title">{{riskSummary.title}}</view>
+      <view class="risk-desc">{{riskSummary.desc}}</view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{reminderSummary.length}}">
+    <view class="section-head">
+      <view class="section-title">提醒</view>
+      <view class="section-action" bindtap="requestReminderAuthorization">授权</view>
+    </view>
+    <view class="reminder-center card">
+      <view class="reminder-center-row" wx:for="{{reminderSummary}}" wx:key="key">
+        <view class="reminder-center-title">{{item.title}}</view>
+        <view class="reminder-center-text">{{item.text}}</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,71 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/plan/index",
+    "pages/coupons/index",
+    "pages/profile/index",
+    "pages/foodPreferences/index",
+    "pages/coupon-detail/index",
+    "pages/plan-confirm/index",
+    "pages/plan-detail/index",
+    "pages/time-options/index",
+    "pages/food-wheel/index",
+    "pages/debug/index",
+    "pages/coupon-edit/index",
+    "pages/weekly-calendar/index",
+    "pages/completed-history/index",
+    "pages/friend-heatmap/index",
+    "pages/friend-heatmap-detail/index"
+  ],
+  "window": {
+    "backgroundColor": "#F2F6F4",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F2F6F4",
+    "navigationBarTitleText": "有时好饭",
+    "navigationBarTextStyle": "black"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于选择券的店铺位置，并在用户确认后估算路程时间"
+    }
+  },
+  "requiredPrivateInfos": [
+    "chooseLocation",
+    "getLocation"
+  ],
+  "tabBar": {
+    "color": "#817B72",
+    "selectedColor": "#3AAFA9",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/plan/index",
+        "text": "计划",
+        "iconPath": "images/icons/business.png",
+        "selectedIconPath": "images/icons/business-active.png"
+      },
+      {
+        "pagePath": "pages/coupons/index",
+        "text": "券包",
+        "iconPath": "images/icons/goods.png",
+        "selectedIconPath": "images/icons/goods-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "images/icons/usercenter.png",
+        "selectedIconPath": "images/icons/usercenter-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

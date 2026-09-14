@@ -1,0 +1,80 @@
+<view class="page food-pref-page">
+  <view class="page-header">
+    <view class="eyebrow">返回不会保存，点保存才生效</view>
+    <view class="page-title">饮食偏好</view>
+    <view class="page-subtitle">把常吃、爱吃和明确不吃的东西分清楚，推荐时就能少踩雷。</view>
+  </view>
+
+  <view class="section">
+    <view class="summary-grid">
+      <view class="summary-card like">
+        <view class="summary-title">爱吃 {{foodDraft.likedFoods.length}}</view>
+        <view class="summary-list" wx:if="{{foodDraft.likedFoods.length}}">
+          <view class="food-chip like" wx:for="{{foodDraft.likedFoods}}" wx:key="*this">{{item}}</view>
+        </view>
+        <view class="empty-text" wx:else>还没有选择</view>
+      </view>
+      <view class="summary-card dislike">
+        <view class="summary-title">不吃 {{foodDraft.dislikedFoods.length}}</view>
+        <view class="summary-list" wx:if="{{foodDraft.dislikedFoods.length}}">
+          <view class="food-chip dislike" wx:for="{{foodDraft.dislikedFoods}}" wx:key="*this">{{item}}</view>
+        </view>
+        <view class="empty-text" wx:else>还没有选择</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">自定义添加</view>
+    </view>
+    <view class="custom-card card">
+      <view class="mode-row">
+        <view
+          class="mode-pill {{foodCustomMode === 'likedFoods' ? 'active like' : ''}}"
+          data-mode="likedFoods"
+          bindtap="selectFoodCustomMode"
+        >爱吃</view>
+        <view
+          class="mode-pill {{foodCustomMode === 'dislikedFoods' ? 'active dislike' : ''}}"
+          data-mode="dislikedFoods"
+          bindtap="selectFoodCustomMode"
+        >不吃</view>
+      </view>
+      <view class="custom-row">
+        <input class="custom-input" placeholder="例如 折耳根、肥肠、香菜" value="{{foodCustomValue}}" bindinput="onFoodCustomInput" />
+        <button class="custom-btn" bindtap="addCustomFood">添加</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">常见选项</view>
+    </view>
+    <view class="option-list">
+      <view class="option-row" wx:for="{{foodOptions}}" wx:key="label">
+        <view class="option-name">{{item.label}}</view>
+        <view class="option-actions">
+          <view
+            class="option-pill like {{item.liked ? 'active' : ''}}"
+            data-label="{{item.label}}"
+            data-mode="likedFoods"
+            bindtap="toggleFoodPreference"
+          >爱吃</view>
+          <view
+            class="option-pill dislike {{item.disliked ? 'active' : ''}}"
+            data-label="{{item.label}}"
+            data-mode="dislikedFoods"
+            bindtap="toggleFoodPreference"
+          >不吃</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="cancelEdit">取消</button>
+    <button class="action-btn primary" bindtap="saveEdit">保存</button>
+  </view>
+</view>

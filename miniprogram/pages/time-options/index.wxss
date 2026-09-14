@@ -1,0 +1,91 @@
+.time-page {
+  padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
+}
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.time-card-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.time-weather-pill {
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+  background: rgba(58, 175, 169, 0.08);
+  color: #2b7a78;
+  display: inline-flex;
+  align-items: center;
+}
+
+.time-weather-badge {
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 4rpx 12rpx;
+  border-radius: 100rpx;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.time-weather-badge.rain {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.time-weather-badge.sun {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.time-weather-badge.cold {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.time-weather-badge.hot {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.time-weather-badge.risk {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+
+.empty-card {
+  margin-top: 24rpx;
+  padding: 30rpx;
+}
+
+.empty-title {
+  color: #1f2933;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.empty-desc {
+  color: #667085;
+  font-size: 25rpx;
+  line-height: 1.5;
+  margin-top: 10rpx;
+}
+
+.bottom-actions {
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid rgba(74, 62, 46, 0.08);
+  bottom: 0;
+  box-sizing: border-box;
+  left: 0;
+  padding: 18rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  position: fixed;
+  right: 0;
+}

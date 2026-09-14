@@ -1,0 +1,416 @@
+<view class="page coupons-page">
+  <view class="page-header coupons-header">
+    <view class="title-wrap">
+      <view class="eyebrow" wx:if="{{batchMode || compareMode}}">{{batchMode ? '多选操作中' : '多选对比中'}}</view>
+      <view class="page-title">券包 <text class="title-count-pill" wx:if="{{statusCounts.all}}">{{statusCounts.all}}</text></view>
+    </view>
+    <view class="header-actions">
+      <button class="batch-mode-btn {{batchMode ? 'active' : ''}}" bindtap="toggleBatchMode">{{batchMode ? '退出' : '批量'}}</button>
+      <button class="compare-mode-btn {{compareMode ? 'active' : ''}}" bindtap="toggleCompareMode">{{compareMode ? '取消' : '对比'}}</button>
+      <button class="add-btn" bindtap="goAdd">+ 添加</button>
+    </view>
+  </view>
+
+  <!-- 顶部好友分享模式横幅 -->
+  <view class="shared-view-banner" wx:if="{{isSharedView}}">
+    <view class="shared-banner-left">
+      <view class="shared-banner-icon">🎁</view>
+      <view class="shared-banner-texts">
+        <view class="shared-banner-title">{{sharedBannerTitle || "好友向你分享了优惠方案"}}</view>
+        <view class="shared-banner-sub">共包含 {{sharedCouponsCount}} 张券</view>
+      </view>
+    </view>
+    <view class="shared-banner-actions">
+      <button class="shared-save-btn" bindtap="saveSharedCouponsToMyList">存入券包</button>
+      <button class="shared-exit-btn" bindtap="exitSharedView">查看全部</button>
+    </view>
+  </view>
+
+  <!-- 快捷选择今日建议横幅 -->
+  <view class="select-today-banner" wx:if="{{selectTodayMode}}" style="background: rgba(58, 175, 169, 0.08); border: 1rpx solid rgba(58, 175, 169, 0.2); padding: 18rpx 24rpx; border-radius: 12rpx; margin-bottom: 24rpx; display: flex; align-items: center; justify-content: space-between; margin-top: 10rpx; margin-left: 24rpx; margin-right: 24rpx;">
+    <view style="font-size: 26rpx; color: var(--primary-color); font-weight: 700;">💡 请选择一张券快速安排在今天 ({{todayDateText}})</view>
+    <view style="font-size: 24rpx; color: var(--text-muted); font-weight: 600; padding: 4rpx 12rpx;" bindtap="exitSelectTodayMode">取消</view>
+  </view>
+
+  <view class="search-box-container card">
+    <text class="search-icon-symbol">🔍</text>
+    <input
+      class="search-input-field"
+      placeholder="搜索店铺、商品或类型..."
+      value="{{searchQuery}}"
+      maxlength="80"
+      bindinput="onSearchInput"
+      confirm-type="search"
+    />
+    <view class="search-clear-symbol" wx:if="{{searchQuery}}" bindtap="clearSearch">✕</view>
+  </view>
+
+  <!-- 状态分段标签栏（全部/待安排/已安排/已过期/已使用） -->
+  <view class="status-segmented-bar">
+    <view class="status-seg-item {{activeStatus === 'all' ? 'active' : ''}}" data-status="all" bindtap="switchStatusTab">全部<text class="seg-num" wx:if="{{statusCounts.all}}">({{statusCounts.all}})</text></view>
+    <view class="status-seg-item {{activeStatus === 'pending' ? 'active' : ''}}" data-status="pending" bindtap="switchStatusTab">待安排<text class="seg-num" wx:if="{{statusCounts.pending}}">({{statusCounts.pending}})</text></view>
+    <view class="status-seg-item {{activeStatus === 'planned' ? 'active' : ''}}" data-status="planned" bindtap="switchStatusTab">已安排<text class="seg-num" wx:if="{{statusCounts.planned}}">({{statusCounts.planned}})</text></view>
+    <view class="status-seg-item {{activeStatus === 'expired' ? 'active' : ''}}" data-status="expired" bindtap="switchStatusTab">已过期<text class="seg-num" wx:if="{{statusCounts.expired}}">({{statusCounts.expired}})</text></view>
+    <view class="status-seg-item {{activeStatus === 'used' ? 'active' : ''}}" data-status="used" bindtap="switchStatusTab">已使用<text class="seg-num" wx:if="{{statusCounts.used}}">({{statusCounts.used}})</text></view>
+  </view>
+
+  <view class="coupon-toolbar card">
+    <view class="sort-row-static">
+      <view
+        wx:for="{{sortOptions}}"
+        wx:key="value"
+        class="sort-tab {{activeSort === item.value ? 'active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectSort"
+      >
+        <text>{{item.label}}</text>
+        <text wx:if="{{item.value === 'price'}}" class="sort-sub-text">{{priceAsc ? '↑' : '↓'}}</text>
+      </view>
+    </view>
+    <view class="filter-entry {{hasActiveFilter ? 'active' : ''}}" bindtap="toggleFilters">
+      <text class="filter-entry-title">筛选</text>
+      <text class="filter-entry-summary">{{filterSummary}}</text>
+    </view>
+  </view>
+
+  <!-- 优化：原生半屏抽屉式筛选面板 (标准安全边距与等宽网格) -->
+  <page-container
+    show="{{showFilters}}"
+    position="bottom"
+    round="true"
+    overlay="true"
+    custom-style="background: #ffffff; border-radius: 36rpx 36rpx 0 0;"
+    bindbeforeleave="toggleFilters"
+  >
+    <view class="filter-panel-drawer">
+      <view class="drawer-drag-handle"></view>
+      <view class="filter-panel-head">
+        <view class="filter-panel-title">筛选条件</view>
+        <view class="filter-reset" bindtap="resetFilters">重置</view>
+      </view>
+
+      <view class="filter-group">
+        <view class="filter-label">分类大类</view>
+        <view class="filter-grid">
+          <view
+            wx:for="{{categories}}"
+            wx:key="value"
+            class="filter-chip {{activeCategory === item.value ? 'active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="selectCategory"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="filter-group">
+        <view class="filter-label">来源平台</view>
+        <view class="filter-grid">
+          <view
+            wx:for="{{platforms}}"
+            wx:key="value"
+            class="filter-chip {{activePlatform === item.value ? 'active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="selectPlatform"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="filter-group">
+        <view class="filter-label">使用状态</view>
+        <view class="filter-grid">
+          <view
+            wx:for="{{statuses}}"
+            wx:key="value"
+            class="filter-chip {{activeStatus === item.value ? 'active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="selectStatus"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <button class="filter-done-btn" bindtap="toggleFilters" hover-class="btn-hover">完成筛选 ({{filteredCouponTotal}}张)</button>
+    </view>
+  </page-container>
+
+  <view class="coupon-list">
+    <view wx:if="{{couponDataReady && !filteredCouponTotal}}" class="empty-card card" style="text-align: center; padding: 72rpx 36rpx; border-radius: 24rpx; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);">
+      <view style="font-size: 76rpx; line-height: 1; margin-bottom: 20rpx;">
+        {{activeStatus === 'pending' ? '🎉' : activeStatus === 'expired' ? '🍃' : activeStatus === 'used' ? '✨' : activeStatus === 'planned' ? '📅' : '🎟️'}}
+      </view>
+      <view class="empty-title" style="font-size: 32rpx; font-weight: 700; color: var(--text-main); margin-bottom: 12rpx;">
+        {{activeStatus === 'pending' ? '太棒了！待安排券包已清空' : activeStatus === 'expired' ? '没有已过期的卡券' : activeStatus === 'planned' ? '暂无已安排的计划券' : activeStatus === 'used' ? '暂无已使用卡券' : '券包暂无卡券'}}
+      </view>
+      <view class="empty-desc" style="font-size: 25rpx; color: var(--text-muted); line-height: 1.5; max-width: 520rpx; margin: 0 auto 36rpx;">
+        {{activeStatus === 'pending' ? '所有优惠券均已规划妥当，点击转盘让灵感带你去觅食吧！' : activeStatus === 'expired' ? '及时行乐，没有一张优惠券被浪费。继续保持！' : activeStatus === 'used' ? '每一顿犒劳生活的美好回忆，都将在使用后沉淀于此。' : '把美团、点评或抖音的套餐券添加进来，智能管家为你规划最省心美味的用餐日程。'}}
+      </view>
+      <view style="display: flex; justify-content: center; gap: 16rpx; flex-wrap: wrap;">
+        <button wx:if="{{hasActiveFilter || activeStatus !== 'all'}}" class="btn btn-secondary compact" bindtap="resetFilters" style="font-size: 24rpx; height: 68rpx; line-height: 68rpx; padding: 0 28rpx; border-radius: 34rpx;">查看全部券</button>
+        <button class="btn btn-secondary compact" bindtap="goFoodWheel" style="font-size: 24rpx; height: 68rpx; line-height: 68rpx; padding: 0 28rpx; border-radius: 34rpx;">🎲 今天吃啥转盘</button>
+        <button class="btn btn-secondary compact" bindtap="restoreSampleData" style="font-size: 24rpx; height: 68rpx; line-height: 68rpx; padding: 0 28rpx; border-radius: 34rpx;">恢复全量示例</button>
+        <button class="btn btn-primary compact" bindtap="goAdd" style="font-size: 24rpx; height: 68rpx; line-height: 68rpx; padding: 0 32rpx; border-radius: 34rpx; font-weight: 700;">+ 添加新券</button>
+      </view>
+    </view>
+
+    <view
+      class="coupon-card card theme-{{index % 2}} {{item.statusCode === 'expired' || item.stateClass === 'expired' ? 'is-expired' : ''}} {{item.statusCode === 'used' ? 'is-used' : ''}} {{compareMode ? 'compare-mode' : ''}} {{item.compareSelected ? 'compare-checked' : ''}} {{batchMode ? 'batch-mode' : ''}} {{item.batchSelected ? 'batch-checked' : ''}}"
+      wx:for="{{filteredCoupons}}"
+      wx:key="id"
+      bindtap="onCardTap"
+      bindlongpress="onLongPressCoupon"
+      data-id="{{item.id}}"
+    >
+      <!-- 批量多选勾选圈 -->
+      <view class="batch-checkbox" wx:if="{{batchMode}}">
+        <view class="checkbox-circle {{item.batchSelected ? 'checked' : ''}}">
+          <text wx:if="{{item.batchSelected}}">✓</text>
+        </view>
+      </view>
+
+      <!-- 对比多选勾选圈 -->
+      <view class="compare-checkbox" wx:if="{{compareMode}}">
+        <view class="checkbox-circle {{item.compareSelected ? 'checked' : ''}}">
+          <text wx:if="{{item.compareSelected}}">✓</text>
+        </view>
+      </view>
+
+      <!-- 1. 头部：类别平台、标题、门店与右侧价格折扣 -->
+      <view class="coupon-top">
+        <view class="coupon-main">
+          <view class="coupon-type">
+            <text class="platform-name">{{item.platform || '平台待补充'}}</text>
+            <text class="type-sep"> · </text>
+            <text>{{item.people || "人数待补充"}}</text>
+          </view>
+          <view class="coupon-title">{{item.title}}</view>
+          <view class="coupon-venue" wx:if="{{item.venue}}" catchtap="openStoreMap" data-venue="{{item.venue}}" data-address="{{item.address}}" data-lat="{{item.latitude || (item.location && item.location.latitude)}}" data-lng="{{item.longitude || (item.location && item.location.longitude)}}">
+            <view class="venue-main">
+              <text>📍 {{item.venue}}</text>
+              <text class="venue-dist" wx:if="{{item.distanceKmText || item.travelTime}}"> · {{item.distanceKmText || item.travelTime}}</text>
+              <view class="venue-arrow"></view>
+            </view>
+          </view>
+        </view>
+        <view class="price-block">
+          <view class="coupon-price-row">
+            <text class="price-symbol" wx:if="{{item.price}}">¥</text>
+            <text class="coupon-price">{{item.price ? item.price : '待补充'}}</text>
+            <text class="original-price-strikethrough" wx:if="{{item.originalPrice}}">¥{{item.originalPrice}}</text>
+          </view>
+          <view class="price-sub-row">
+            <view class="discount-pill" wx:if="{{item.discountText}}">{{item.discountText}}</view>
+            <view class="coupon-state {{item.stateClass}}">{{item.state}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 2. 有效期倒计时与生命进度条 (临期动效与倒计时融为一体) -->
+      <view class="validity-life-row" wx:if="{{item.statusCode !== 'used'}}">
+        <text class="validity-clock-icon">⏰</text>
+        <view class="expiry-progress-container">
+          <view class="expiry-progress-fill {{item.lifeColorClass}}" style="width: {{item.expiryProgress}}%; background-color: {{item.lifeBarColor}};"></view>
+        </view>
+        <text class="validity-countdown-text {{item.stateClass === 'urgent' ? 'urgent-text' : ''}}">{{item.stateClass === 'urgent' ? '🔥 ' + item.expiresIn : item.expiresIn}}</text>
+      </view>
+      <view class="used-time-row" wx:else>
+        <text class="used-time-icon">✓</text>
+        <text class="used-time-text">{{item.validityText}}</text>
+      </view>
+
+      <!-- 3A. 折叠态：简洁摘要 + 右下角极简无尾向下小箭头 (点击卡片或箭头自由展开) -->
+      <view class="coupon-collapsed-footer" wx:if="{{expandedCouponId !== item.id}}">
+        <view class="collapsed-pills-left">
+          <view class="rule-pill" wx:if="{{item.statusCode === 'used'}}">使用 {{item.usedAtText || '时间待补'}}</view>
+          <view class="rule-pill" wx:elif="{{item.expireDate}}">截止 {{item.expireDate}}</view>
+          <view class="rule-pill highlight" wx:if="{{item.recommendationScore !== null && item.recommendationScore !== undefined}}">适合度 {{item.recommendationScore}}%</view>
+          <view class="rule-pill">{{item.reservationStatus === 'not_required' ? '免预约' : item.reservationStatus === 'confirmed' ? '已预约' : item.reservationStatus === 'pending' ? '待预约' : item.reservationRequired ? '需预约' : '预约待补充'}}</view>
+        </view>
+        <view class="card-expand-chevron" catchtap="toggleExpand" data-id="{{item.id}}"></view>
+      </view>
+
+      <!-- 3B. 展开态：三维指标 + 详细信息 + 快捷行动按钮 (无需跳转即可加入计划或查详情) -->
+      <view class="coupon-expanded-body" wx:if="{{expandedCouponId === item.id}}">
+        <!-- 标签行 -->
+        <view class="expanded-rules-row">
+          <view class="rule-pill">{{item.platform || '平台待补充'}}</view>
+          <view class="rule-pill">{{item.reservationStatus === 'not_required' ? '免预约' : item.reservationStatus === 'confirmed' ? '已预约' : item.reservationStatus === 'pending' ? '待预约' : item.reservationRequired ? '需预约' : '预约待补充'}}</view>
+          <view class="rule-pill" wx:if="{{item.refundType === 'auto'}}">自动退</view>
+          <view class="rule-pill" wx:if="{{item.discountText}}">{{item.discountText}}</view>
+        </view>
+
+        <!-- 虚线分隔 -->
+        <view class="expanded-divider"></view>
+
+        <!-- 三维核心指标卡格 (左右严格对齐) -->
+        <view class="deal-metrics">
+          <view class="metric" catchtap="goDetailSection" data-id="{{item.id}}" data-target="rules">
+            <view class="metric-value">{{item.validityValue}}</view>
+            <view class="metric-label">{{item.validityLabel}}</view>
+          </view>
+          <view class="metric" catchtap="goDetailSection" data-id="{{item.id}}" data-target="rules">
+            <view class="metric-value">{{item.travelTime || '待估算'}}</view>
+            <view class="metric-label">单程</view>
+          </view>
+          <view class="metric score-metric" catchtap="goDetailSection" data-id="{{item.id}}" data-target="recommendation">
+            <view class="metric-value">{{item.recommendationScore !== null && item.recommendationScore !== undefined ? item.recommendationScore + '%' : '待评估'}}</view>
+            <view class="metric-label">适合度</view>
+          </view>
+        </view>
+
+        <!-- 详细地址（带经典双重矩形复制标识）与营业时段 -->
+        <view class="expanded-meta-row" wx:if="{{item.address || item.usableTime}}">
+          <view class="expanded-address-row" wx:if="{{item.address}}">
+            <text class="address-text">📍 {{item.address}}</text>
+            <view class="venue-copy-btn" catchtap="copyAddress" data-address="{{item.address}}">
+              <view class="copy-icon-box">
+                <view class="copy-icon-back"></view>
+                <view class="copy-icon-front"></view>
+              </view>
+            </view>
+          </view>
+          <view class="expanded-time-row" wx:if="{{item.usableTime}}">
+            <text class="time-text">🕒 {{item.usableTime}}</text>
+          </view>
+        </view>
+
+        <!-- 标签组 -->
+        <view class="expanded-tags-row" wx:if="{{item.tags && item.tags.length}}">
+          <view class="tag-pill" wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this">{{t}}</view>
+        </view>
+
+        <!-- 核心行动按钮组 -->
+        <view class="expanded-action-row">
+          <button class="btn btn-secondary card-detail-btn" catchtap="goDetail" data-id="{{item.id}}">查看详情</button>
+          <button wx:if="{{item.statusCode === 'expired' || item.stateClass === 'expired'}}" class="btn btn-renew card-plan-btn" catchtap="openExtendDialog" data-id="{{item.id}}">🔄 快捷延期</button>
+          <button wx:elif="{{item.statusCode === 'used'}}" class="btn btn-secondary card-plan-btn" disabled="true">已完成核销</button>
+          <button wx:else class="btn btn-primary card-plan-btn" catchtap="addToPlan" data-id="{{item.id}}">加入计划</button>
+        </view>
+
+        <!-- 底部极简向上收起箭头 -->
+        <view class="card-collapse-row" catchtap="toggleExpand" data-id="{{item.id}}">
+          <view class="card-collapse-chevron"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部批量操作悬浮栏 -->
+  <view class="batch-floating-bar {{batchMode ? 'visible' : ''}}">
+    <view class="batch-floating-info">
+      <view class="batch-floating-title">已选 {{selectedBatchCount}} 张</view>
+      <view class="batch-quick-links">
+        <text class="batch-link" bindtap="selectAllBatch">全选</text>
+        <text class="batch-link-sep">|</text>
+        <text class="batch-link" bindtap="invertSelectBatch">反选</text>
+      </view>
+    </view>
+    <view class="batch-floating-actions">
+      <button class="btn btn-share batch-action-btn" disabled="{{selectedBatchCount < 1}}" bindtap="openShareCandidateDrawer">📢 分享</button>
+      <button class="btn btn-secondary batch-action-btn" disabled="{{!selectedBatchCount}}" bindtap="batchMarkUsed">标记已用</button>
+      <button class="btn btn-danger batch-action-btn" disabled="{{!selectedBatchCount}}" bindtap="batchDelete">批量删除</button>
+    </view>
+  </view>
+
+  <!-- 底部对比悬浮栏 -->
+  <view class="compare-floating-bar {{compareMode && selectedCompareCount > 0 ? 'visible' : ''}}">
+    <view class="compare-floating-info">
+      <view class="compare-floating-title">对比模式 ({{selectedCompareCount}}/3)</view>
+      <view class="compare-floating-desc">勾选2~3张可对比或生成约局卡</view>
+    </view>
+    <view class="compare-floating-actions">
+      <button class="btn btn-secondary compare-share-btn" disabled="{{selectedCompareCount < 2}}" bindtap="openShareCandidateFromCompare">📢 约局分享</button>
+      <button class="btn btn-primary compare-start-btn" disabled="{{selectedCompareCount < 2}}" bindtap="startCompare">开始对比</button>
+    </view>
+  </view>
+
+  <!-- 对比结果弹窗/抽屉 -->
+  <view class="compare-drawer-mask {{showCompareDrawer ? 'visible' : ''}}" bindtap="closeCompare">
+    <view class="compare-drawer-content" catchtap="stopPropagation" style="{{compareDragY ? 'transform: translateY(' + compareDragY + 'px);' : ''}}">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onCompareTouchStart" bindtouchmove="onCompareTouchMove" bindtouchend="onCompareTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="compare-drawer-header" bindtouchstart="onCompareTouchStart" bindtouchmove="onCompareTouchMove" bindtouchend="onCompareTouchEnd">
+        <view class="compare-drawer-title">参数对比矩阵</view>
+        <view class="compare-header-right">
+          <view class="compare-share-pill" bindtap="openShareCandidateFromCompare">📢 约局投票卡</view>
+          <view class="compare-drawer-close" bindtap="closeCompare">✕</view>
+        </view>
+      </view>
+
+      <scroll-view class="compare-matrix-scroll" scroll-x="true" scroll-y="true">
+        <view class="compare-matrix-table">
+          <view class="compare-column labels">
+            <view class="compare-cell header-cell">指标 \ 优惠券</view>
+            <view class="compare-cell">价格</view>
+            <view class="compare-cell">适合度</view>
+            <view class="compare-cell">单程时间</view>
+            <view class="compare-cell">到期/使用时间</view>
+            <view class="compare-cell">类型/人数</view>
+            <view class="compare-cell dishes-cell">套餐明细</view>
+            <view class="compare-cell desc-cell">使用规则</view>
+            <view class="compare-cell action-cell">操作</view>
+          </view>
+
+          <view class="compare-column item-col theme-{{index % 2}}" wx:for="{{compareItems}}" wx:key="id">
+            <view class="compare-cell header-cell">
+              <view class="compare-item-venue">{{item.venue || '店铺待补充'}}</view>
+              <view class="compare-item-title">{{item.title}}</view>
+            </view>
+            <view class="compare-cell price-val">{{item.price ? '¥' + item.price : '待补充'}}</view>
+            <view class="compare-cell score-val">{{item.recommendationScore !== null && item.recommendationScore !== undefined ? item.recommendationScore + '%' : '待评估'}}</view>
+            <view class="compare-cell">{{item.travelTime || '待估算'}}</view>
+            <view class="compare-cell highlight-val">{{item.validityText || item.expiresIn}}</view>
+            <view class="compare-cell">{{item.type || '类型待补充'}} · {{item.people || '人数待补充'}}</view>
+            <view class="compare-cell dishes-cell">{{item.dishes || '明细待补充'}}</view>
+            <view class="compare-cell desc-cell">{{item.usageRules && item.usageRules.notes || '规则待补充'}}</view>
+            <view class="compare-cell action-cell">
+              <button class="btn btn-primary compact" bindtap="compareSelectAction" data-id="{{item.id}}">安排此券</button>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 约局候选投票卡分享抽屉 -->
+  <view class="share-candidate-mask {{showShareCandidateDrawer ? 'visible' : ''}}" bindtap="closeShareCandidateDrawer">
+    <view class="share-candidate-drawer" catchtap="stopPropagation" style="{{shareDragY ? 'transform: translateY(' + shareDragY + 'px);' : ''}}">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onShareDrawerTouchStart" bindtouchmove="onShareDrawerTouchMove" bindtouchend="onShareDrawerTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="share-drawer-header" bindtouchstart="onShareDrawerTouchStart" bindtouchmove="onShareDrawerTouchMove" bindtouchend="onShareDrawerTouchEnd">
+        <view class="share-drawer-title-wrap">
+          <view class="share-drawer-title-row">
+            <text class="share-drawer-title">📢 约局候选投票卡</text>
+            <text class="share-drawer-count-badge">已选 {{shareCandidateItems.length}} 项</text>
+          </view>
+          <view class="share-drawer-subtitle">快速生成群投票文案或分享给微信好友决策</view>
+        </view>
+        <view class="share-drawer-close" bindtap="closeShareCandidateDrawer">✕</view>
+      </view>
+
+      <scroll-view class="share-candidate-scroll" scroll-y="true">
+        <view class="share-candidate-card" wx:for="{{shareCandidateItems}}" wx:key="id">
+          <view class="share-candidate-badge">{{item.badge}}</view>
+          <view class="share-candidate-body">
+            <view class="share-candidate-name">{{item.title}}</view>
+            <view class="share-candidate-venue">{{item.venue || item.merchantName || '店铺待补充'}}</view>
+            <view class="share-candidate-meta">
+              <text wx:if="{{item.price}}">💰 ¥{{item.price}}</text>
+              <text wx:if="{{item.originalPrice}}" class="share-meta-original">¥{{item.originalPrice}}</text>
+              <text class="share-meta-sep">·</text>
+              <text>👥 {{item.people || '人数待补充'}}</text>
+              <text class="share-meta-sep">·</text>
+              <text>⏰ {{item.expiresIn || '有效期待补充'}}</text>
+            </view>
+            <view class="share-candidate-dishes" wx:if="{{item.dishesSummary}}">🍽️ {{item.dishesSummary}}</view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="share-drawer-actions">
+        <button class="share-action-btn share-action-copy" bindtap="copyShareCandidateText">💬 复制群投票文案</button>
+        <button class="share-action-btn share-action-send" open-type="share">✉️ 发送微信卡片</button>
+      </view>
+    </view>
+  </view>
+</view>

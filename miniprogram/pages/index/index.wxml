@@ -1,0 +1,398 @@
+<view class="page home-page">
+  <view wx:if="{{errorMsg}}" style="padding: 30rpx; background: #fee2e2; color: #991b1b; font-size: 28rpx; word-break: break-all; border-radius: 12rpx; margin-bottom: 20rpx;">
+    <view style="font-weight: bold; margin-bottom: 10rpx;">脚本/数据加载错误：</view>
+    <text>{{errorMsg}}</text>
+  </view>
+
+  <!-- iOS Skeleton Loading Loader -->
+  <view wx:if="{{loading}}" class="skeleton-container">
+    <view class="skeleton-pulse skeleton-header"></view>
+    <view class="skeleton-pulse skeleton-weather"></view>
+    <view class="skeleton-pulse skeleton-section-title" style="width: 240rpx;"></view>
+    <view class="skeleton-pulse skeleton-recommend"></view>
+    <view class="skeleton-pulse skeleton-section-title" style="width: 180rpx;"></view>
+    <view class="skeleton-pulse skeleton-list-item" wx:for="{{[1,2]}}" wx:key="*this"></view>
+  </view>
+
+  <block wx:else>
+    <!-- 顶部 Header -->
+    <view class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx;">
+      <view>
+        <view class="eyebrow" style="font-size: 22rpx; color: var(--text-muted, #94a3b8); font-weight: 600; line-height: 1.2;">{{todayLabel}}</view>
+        <view class="page-title" style="font-size: 30rpx; font-weight: 800; color: var(--text-main, #0f172a); margin-top: 4rpx; line-height: 1.2;">今日好饭安排</view>
+      </view>
+
+      <!-- 起点切换药丸组件 (双行结构：第一行地址命名+下拉箭头，第二行精简具体位置) -->
+      <view class="origin-selector-bar" bindtap="changeRouteOrigin" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; padding: 10rpx 18rpx; background: rgba(58, 175, 169, 0.06); border-radius: 18rpx; border: 1rpx solid rgba(58, 175, 169, 0.15); max-width: 320rpx; box-sizing: border-box;">
+        <view style="display: flex; align-items: center; gap: 6rpx; line-height: 1.2;">
+          <text style="font-size: 22rpx; flex-shrink: 0;">📍</text>
+          <text style="font-size: 24rpx; font-weight: 700; color: var(--primary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220rpx;">{{currentOriginTitle || currentOriginLabel}}</text>
+          <view style="width: 0; height: 0; border-left: 6rpx solid transparent; border-right: 6rpx solid transparent; border-top: 6rpx solid var(--primary-color); margin-left: 4rpx; flex-shrink: 0;"></view>
+        </view>
+        <view style="font-size: 20rpx; color: var(--text-secondary, #64748b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 270rpx; margin-top: 4rpx; line-height: 1.2;">
+          {{currentOriginDetail || currentLocationName}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 透明天气粒子外溢层 (覆盖天气卡片及外围空间，雨丝/雪花/落叶/流光粒子在更宽广区域自由飘落) -->
+    <canvas type="2d" id="weatherCanvas" class="weather-spill-canvas"></canvas>
+
+    <!-- iOS 拟真毛玻璃天气天窗 (一体化水晶透镜 + 极细高光边 + 内部深邃天体) -->
+    <view class="weather-card-v2 {{weather.v2Scene.visual.background.isNight ? 'is-night' : 'is-day'}} {{isPageVisible ? 'is-animating' : 'is-paused'}}" style="background: {{weather.v2Scene.visual.background.gradient || 'linear-gradient(135deg, #38bdf8, #bae6fd)'}}; --ambient-glow: {{weather.v2Scene.visual.ambientGlow || 'rgba(58, 141, 255, 0.28)'}};" bindtap="changeWeather">
+
+      <!-- Layer 2: 天气氛围遮罩层 -->
+      <view class="weather-overlay-v2 {{weather.v2Scene.visual.background.isNight ? 'night-mask' : 'day-mask'}}"></view>
+
+      <!-- Layer 3: 天体层 (太阳 / 月亮 / 星星) -->
+      <view class="celestial-layer-v2">
+        <!-- Sun -->
+        <block wx:if="{{weather.v2Scene.visual.celestial.sun.visible}}">
+          <view class="sun-glow-v2" style="left: {{weather.v2Scene.visual.celestial.sun.x}}%; top: {{weather.v2Scene.visual.celestial.sun.y}}%; opacity: {{weather.v2Scene.visual.celestial.sun.glow}};"></view>
+          <view class="sun-body-v2 {{weather.v2Scene.visual.celestial.sun.tint}}" style="left: {{weather.v2Scene.visual.celestial.sun.x}}%; top: {{weather.v2Scene.visual.celestial.sun.y}}%; width: {{weather.v2Scene.visual.celestial.sun.size}}rpx; height: {{weather.v2Scene.visual.celestial.sun.size}}rpx; opacity: {{weather.v2Scene.visual.celestial.sun.opacity}};"></view>
+        </block>
+        <!-- Moon -->
+        <block wx:if="{{weather.v2Scene.visual.celestial.moon.visible}}">
+          <view class="moon-halo-v2" wx:if="{{weather.v2Scene.visual.celestial.moon.glow > 0.4}}" style="left: {{weather.v2Scene.visual.celestial.moon.x}}%; top: {{weather.v2Scene.visual.celestial.moon.y}}%; width: {{weather.v2Scene.visual.celestial.moon.haloSize}}rpx; height: {{weather.v2Scene.visual.celestial.moon.haloSize}}rpx; opacity: {{weather.v2Scene.visual.celestial.moon.opacity * weather.v2Scene.visual.celestial.moon.glow * 0.55}};"></view>
+
+          <!-- 满月彩蛋：金黄真实剪影玉兔贴月奔跑 -->
+          <view class="moon-rabbit-orbit-track" wx:if="{{weather.v2Scene.visual.celestial.moon.showRabbit}}" style="left: {{weather.v2Scene.visual.celestial.moon.x}}%; top: {{weather.v2Scene.visual.celestial.moon.y}}%; width: {{weather.v2Scene.visual.celestial.moon.orbitSize}}rpx; height: {{weather.v2Scene.visual.celestial.moon.orbitSize}}rpx;">
+            <view class="moon-rabbit-container">
+              <image class="real-lunar-bunny" src="/assets/rabbit_run_coherent_v2_15f.png" mode="scaleToFill"></image>
+            </view>
+          </view>
+
+          <view class="moon-body-v2 {{weather.v2Scene.visual.celestial.moon.phase}}" style="left: {{weather.v2Scene.visual.celestial.moon.x}}%; top: {{weather.v2Scene.visual.celestial.moon.y}}%; width: {{weather.v2Scene.visual.celestial.moon.size}}rpx; height: {{weather.v2Scene.visual.celestial.moon.size}}rpx; opacity: {{weather.v2Scene.visual.celestial.moon.opacity}};">
+            <!-- 连续月相：暗月基底 + 盈亏半球 + 椭圆明暗终止线 -->
+            <view class="moon-light-half {{weather.v2Scene.visual.celestial.moon.lightSide}}">
+              <view class="moon-light-disk"></view>
+            </view>
+            <view class="moon-terminator {{weather.v2Scene.visual.celestial.moon.terminatorTone}}" style="transform: scaleX({{weather.v2Scene.visual.celestial.moon.terminatorScale}});"></view>
+            <!-- 月球表面立体地形：极淡柔焦月影 -->
+            <view class="moon-surface">
+              <view class="moon-mare mare-1"></view>
+              <view class="moon-mare mare-2"></view>
+            </view>
+          </view>
+        </block>
+        <!-- Stars -->
+        <block wx:if="{{weather.v2Scene.visual.celestial.stars.visible}}">
+          <view class="stars-container-v2" style="opacity: {{weather.v2Scene.visual.celestial.stars.opacity}};">
+            <view class="star-particle-v2 star-1-v2"></view>
+            <view class="star-particle-v2 star-2-v2"></view>
+            <view class="star-particle-v2 star-3-v2"></view>
+            <view class="star-particle-v2 star-4-v2"></view>
+            <view class="star-particle-v2 star-5-v2"></view>
+            <view class="star-particle-v2 star-6-v2"></view>
+          </view>
+        </block>
+      </view>
+
+      <!-- Layer 4: 云层 (Procedural Volumetric Clouds) -->
+      <view class="cloud-layer-v2" wx:if="{{weather.v2Scene.visual.clouds.visible}}" style="opacity: {{weather.v2Scene.visual.clouds.opacity}};">
+        <view wx:for="{{v2Clouds}}" wx:key="id" class="cloud-puff-v2 {{weather.v2Scene.visual.clouds.grayCloudDensity > 0.5 ? 'gray' : weather.v2Scene.visual.clouds.darkCloudDensity > 0.5 ? 'dark' : 'white'}}" style="width: {{item.width}}rpx; height: {{item.height}}rpx; top: {{item.top}}rpx; opacity: {{item.opacity}}; animation-duration: {{item.duration}}s; animation-delay: {{item.delay}}s; --b-size: {{item.bSize}}rpx; --b-top: {{item.bTop}}rpx; --b-left: {{item.bLeft}}rpx; --a-size: {{item.aSize}}rpx; --a-top: {{item.aTop}}rpx; --a-right: {{item.aRight}}rpx;"></view>
+      </view>
+
+      <!-- Layer 5: 闪电粒子层 (Lightning Bolts) -->
+      <block wx:if="{{weather.v2Scene.visual.particles.thunder.visible}}">
+        <view class="lightning-overlay-v2"></view>
+        <view class="lightning-bolt-v2 lightning-bolt-1-v2"></view>
+        <view class="lightning-bolt-v2 lightning-bolt-2-v2"></view>
+        <view class="lightning-bolt-v2 lightning-bolt-3-v2"></view>
+        <view class="lightning-bolt-v2 lightning-bolt-4-v2"></view>
+      </block>
+
+      <!-- Layer 6: 雾 / 霾 / 冰 / 热浪氛围层 -->
+      <view class="atmosphere-layer-v2">
+        <view class="fog-overlay-v2" wx:if="{{weather.v2Scene.visual.atmosphere.fog.visible}}" style="opacity: {{weather.v2Scene.visual.atmosphere.fog.opacity}};"></view>
+        <view class="haze-overlay-v2 {{weather.v2Scene.visual.atmosphere.haze.tint}}" wx:if="{{weather.v2Scene.visual.atmosphere.haze.visible}}" style="opacity: {{weather.v2Scene.visual.atmosphere.haze.opacity}};"></view>
+        <block wx:if="{{weather.v2Scene.visual.atmosphere.fog.visible || weather.v2Scene.visual.atmosphere.haze.visible}}">
+          <view class="fog-mist-layer-v2 mist-1-v2"></view>
+          <view class="fog-mist-layer-v2 mist-2-v2"></view>
+          <view class="fog-mist-layer-v2 mist-3-v2"></view>
+        </block>
+        <view class="ice-border-v2 {{weather.v2Scene.visual.atmosphere.ice.frostPattern ? 'frost' : ''}}" wx:if="{{weather.v2Scene.visual.atmosphere.ice.visible}}" style="opacity: {{weather.v2Scene.visual.atmosphere.ice.edgeOpacity}};"></view>
+        <view class="heat-wave-v2" wx:if="{{weather.v2Scene.visual.atmosphere.heat.visible}}" style="opacity: {{weather.v2Scene.visual.atmosphere.heat.glowStrength}};"></view>
+      </view>
+
+      <!-- Layer 7: 文案与 chip 层 (两行结构：第一行主天气大字，第二行具体解释与建议) -->
+      <view class="ios-weather-grid-v2">
+        <view class="ios-weather-left-v2">
+          <view class="ios-weather-main-title-v2">{{weather.v2Scene.semantic.displayTitle || weather.condition || '天气待更新'}}</view>
+          <view class="ios-weather-status-v2">{{weather.sourceLabel}} · {{weather.v2Scene.semantic.displaySubtitle || weather.summary || '天气待更新'}}</view>
+        </view>
+        <view class="ios-weather-right-v2">
+          <view class="ios-weather-temp-v2">{{weather.temperatureText || weather.v2Scene.semantic.temperatureText || (weather.temperature + '°')}}</view>
+          <view class="ios-weather-range-v2">{{weather.hasTemperatureRange ? ('最高 ' + weather.temperatureMax + '° 最低 ' + weather.temperatureMin + '°') : '最高/最低温待更新'}}</view>
+          <view wx:if="{{weather.hasAqi}}" class="weather-aqi-badge-v2 {{weather.v2Scene.semantic.aqi.class || 'good'}}">{{weather.v2Scene.semantic.aqi.text}}</view>
+        </view>
+      </view>
+
+      <view class="ios-weather-tags-v2">
+        <view class="glass-tag-v2" wx:for="{{weather.v2Scene.semantic.chips || weather.tips}}" wx:key="*this">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- Extreme Weather Safety Warning Banner (Super Compact Marquee style with smooth slide transition) -->
+    <view class="extreme-warning-banner-v2 {{weather.v2Scene.business.weatherRiskLevel >= 3 ? 'danger' : 'warning'}} {{weather.v2Scene.business.weatherRiskLevel >= 2 ? 'is-visible' : ''}}">
+      <view class="warning-icon-v2"></view>
+      <view class="warning-content-v2">
+        <view class="warning-desc-v2">
+          <block wx:if="{{weather.v2Scene.business.weatherRiskLevel >= 3}}">
+            <text style="font-weight: 700;">极端预警：</text>气温极端或伴有暴风雨雷暴，生命安全第一，建议留在安全室内。
+          </block>
+          <block wx:else>
+            <text style="font-weight: 700;">出行建议：</text>{{weather.v2Scene.business.warnings[0] || '天气多变，出行请注意安全。'}}
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快捷功能区 (iOS 极简彩色轻量胶囊) -->
+    <view class="quick-entry-bar">
+      <navigator class="quick-item calendar" url="/pages/weekly-calendar/index">
+        <view class="quick-icon icon-calendar"></view>
+        <text class="quick-title">本周计划</text>
+      </navigator>
+
+      <navigator class="quick-item wheel" url="/pages/food-wheel/index">
+        <view class="quick-icon icon-wheel"></view>
+        <text class="quick-title">今天吃啥</text>
+      </navigator>
+
+      <navigator class="quick-item friends" url="/pages/friend-heatmap/index">
+        <view class="quick-icon icon-friends"></view>
+        <text class="quick-title">好友空档</text>
+      </navigator>
+    </view>
+
+    <!-- 今日首选推荐卡片 -->
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">今日首选安排</view>
+        <view class="section-action" bindtap="goCoupons">查看券包</view>
+      </view>
+
+      <view wx:if="{{hasRecommendation}}" class="recommend-card card {{recommendBlocked ? 'blocked' : ''}}" bindtap="goCouponDetail" data-id="{{recommend.id}}">
+        <view class="recommend-top">
+          <view class="coupon-type">
+            <text>{{recommend.platform || "平台待补充"}} · {{recommend.people || "人数待补充"}}</text>
+            <text class="recommend-weather-badge {{recommend.timeAffinityBadge.theme || 'badge-time'}}" wx:if="{{recommend.timeAffinityBadge}}">{{recommend.timeAffinityBadge.label}}</text>
+            <text class="recommend-weather-badge {{recommend.weatherBadge.theme}}" wx:if="{{recommend.weatherBadge}}">{{recommend.weatherBadge.label}}</text>
+          </view>
+
+          <!-- iOS 胶囊适合度徽章 -->
+          <view class="score-pill-container {{recommendBlocked ? 'blocked' : ''}}">
+            <text class="score-value">{{recommendBlocked ? '⚠️ 有风险' : recommend.score + '% 适合度'}}</text>
+          </view>
+        </view>
+
+        <view class="recommend-title">{{recommend.title}}</view>
+        <view class="recommend-meta">{{recommendBlocked ? '暂不安排建议：有时间或天气冲突' : '推荐时段：' + recommend.recommendedAt}}</view>
+
+        <!-- iOS 价格展示与折扣元数据 -->
+        <view class="signal-row">
+          <view class="signal-item">
+            <view class="signal-value">{{recommend.expiresIn}}</view>
+            <view class="signal-label">截止</view>
+          </view>
+          <view class="signal-item">
+            <view class="signal-value">{{recommend.travelTime}}</view>
+            <view class="signal-label">单程路程</view>
+          </view>
+          <view class="signal-item">
+            <view class="price-numbers-row" style="display: flex; align-items: baseline; justify-content: center; gap: 8rpx;">
+              <text class="signal-value">{{recommend.price ? '¥' + recommend.price : '待补充'}}</text>
+              <text class="original-price-strikethrough" wx:if="{{recommend.originalPrice}}" style="text-decoration: line-through; color: var(--text-muted); font-size: 22rpx; opacity: 0.6; font-weight: normal;">¥{{recommend.originalPrice}}</text>
+            </view>
+            <view class="signal-label">{{recommend.discountText ? '金额 (' + recommend.discountText + ')' : '金额'}}</view>
+          </view>
+        </view>
+
+        <view class="recommend-summary" wx:if="{{recommend.primaryReason}}">
+          <text class="recommend-summary-icon">💡</text>
+          <text class="recommend-summary-text">{{recommend.primaryReason}}</text>
+        </view>
+
+        <view class="highlight-tags-row" wx:if="{{recommend.highlightTags.length}}">
+          <view class="highlight-tag {{item.type}}" wx:for="{{recommend.highlightTags}}" wx:key="label">
+            {{item.label}}
+          </view>
+        </view>
+
+        <view class="button-row">
+          <block wx:if="{{!recommendBlocked}}">
+            <button class="btn btn-primary" catchtap="addRecommendToPlan">✓ 就定这个时间</button>
+            <button class="btn btn-secondary" catchtap="changeRecommendTime">换个时间</button>
+          </block>
+          <block wx:else>
+            <button class="btn btn-primary" catchtap="goRecommendDetail">查看详细原因</button>
+            <button class="btn btn-secondary" catchtap="goCoupons">查看其他券</button>
+          </block>
+        </view>
+      </view>
+
+      <!-- 今日暂无首选建议（纯背景半透明加号水印卡片） -->
+      <view wx:else class="today-empty-dashed-card">
+        <view class="dashed-add-button-trigger" bindtap="selectTodayPlan">
+          <!-- 纯背景居中半透明加号水印（不占任何文本行） -->
+          <view class="dashed-bg-watermark-plus"></view>
+          <view class="dashed-card-title">今日暂无首选建议</view>
+          <view class="dashed-card-suggestion">{{todaySuggestion}}</view>
+        </view>
+        <view class="dashed-card-action" catchtap="goAddCoupon">
+          去券包添加新券 >
+        </view>
+      </view>
+    </view>
+
+    <!-- iOS 列表分组样式的备选顺位 -->
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">备选顺位</view>
+        <view class="section-action" bindtap="goCoupons">{{priorityList.length ? '全部券包 >' : '去券包 >'}}</view>
+      </view>
+      <view class="ios-list-group" wx:if="{{priorityList.length}}">
+        <view class="ios-cell" wx:for="{{priorityList}}" wx:key="id" bindtap="goCouponDetail" data-id="{{item.id}}">
+          <view class="ios-cell-left">
+            <view class="priority-index-badge">{{index + 1}}</view>
+            <view class="priority-cell-texts">
+              <view class="priority-title">{{item.title}}</view>
+              <view class="priority-chips-row">
+                <text class="chip-pill {{item.days <= 3 ? 'urgent' : 'normal'}}">{{item.expiresIn}}</text>
+                <text class="chip-pill price" wx:if="{{item.price}}">¥{{item.price}}</text>
+                <text class="chip-pill time" wx:if="{{item.recommendedAt && item.recommendedAt !== '暂无合适时间'}}">{{item.recommendedAt}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="ios-cell-right">
+            <view class="tag {{item.stateClass === 'urgent' ? 'red' : item.stateClass === 'priority' ? 'orange' : item.stateClass === 'ready' ? 'green' : 'blue'}}">{{item.state}}</view>
+            <view class="ios-chevron"></view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="section-empty-card" bindtap="goAddCoupon">
+        <view class="section-empty-icon">🎫</view>
+        <view class="section-empty-content">
+          <view class="section-empty-title">暂无备选安排</view>
+          <view class="section-empty-desc">添加可用券后，这里会按期限、距离和时间自动排序</view>
+        </view>
+        <view class="section-empty-chevron"></view>
+      </view>
+    </view>
+
+    <!-- 横向滚动周历网格排程 -->
+    <view class="section">
+      <view class="section-head">
+        <view class="section-title">本周排程推荐</view>
+        <view class="section-action" bindtap="goWeeklyCalendar">查看日历 ></view>
+      </view>
+      <scroll-view wx:if="{{weeklyArrangement && weeklyArrangement.items.length}}" class="weekly-grid-scroll" scroll-x="true" show-scrollbar="false">
+        <view class="weekly-grid-row">
+          <view class="weekly-grid-item card {{item.isPlanned ? 'planned' : ''}}" wx:for="{{weeklyArrangement.items}}" wx:key="couponId" bindtap="onWeeklyItemTap" data-id="{{item.couponId}}" data-plan-id="{{item.planId}}" data-planned="{{item.isPlanned}}">
+            <view class="weekly-bg-symbol">{{item.planTime.weekday === '周一' ? 'MON' : item.planTime.weekday === '周二' ? 'TUE' : item.planTime.weekday === '周三' ? 'WED' : item.planTime.weekday === '周四' ? 'THU' : item.planTime.weekday === '周五' ? 'FRI' : item.planTime.weekday === '周六' ? 'SAT' : 'SUN'}}</view>
+            <view class="weekly-item-time">{{item.planTime.weekday}} · {{item.planTime.scene}}</view>
+            <view class="weekly-item-title">{{item.title}}</view>
+            <view class="weekly-item-score-row">
+              <view class="weekly-item-score {{item.isPlanned ? 'planned' : ''}}">{{item.isPlanned ? '已排定' : (item.score !== null && item.score !== undefined ? item.score + '%' : '待评估')}}</view>
+              <view class="weekly-item-score-label">{{item.isPlanned ? '当前计划' : '适合度'}}</view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view wx:else class="section-empty-card weekly" bindtap="goWeeklyCalendar">
+        <view class="section-empty-icon">🗓️</view>
+        <view class="section-empty-content">
+          <view class="section-empty-title">本周还没有排程</view>
+          <view class="section-empty-desc">确定首选时间后，本周安排会集中显示在这里</view>
+        </view>
+        <view class="section-empty-chevron"></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- iOS 拟真毛玻璃天气快捷切换抽屉 -->
+  <view class="weather-drawer-mask {{showWeatherDrawer ? 'show' : ''}}" bindtap="closeWeatherDrawer">
+    <view class="weather-drawer {{showWeatherDrawer ? 'show' : ''}}" catchtap="stopPropagation" style="{{weatherDragY ? 'transform: translateY(' + weatherDragY + 'px);' : ''}}">
+      <view class="drawer-pull-handle-bar" bindtouchstart="onWeatherTouchStart" bindtouchmove="onWeatherTouchMove" bindtouchend="onWeatherTouchEnd">
+        <view class="pull-handle-indicator"></view>
+      </view>
+      <view class="drawer-header" bindtouchstart="onWeatherTouchStart" bindtouchmove="onWeatherTouchMove" bindtouchend="onWeatherTouchEnd">
+        <view class="drawer-title">组合配置模拟天气</view>
+        <view class="drawer-reset-btn" catchtap="resetDrawerWeather">恢复预设</view>
+      </view>
+
+      <scroll-view scroll-y class="drawer-v2-scroll">
+        <view class="drawer-section">
+          <view class="section-title">时间阶段: {{timePhases[v2TimeIndex].label}}</view>
+          <slider min="0" max="6" value="{{v2TimeIndex}}" bindchange="changeV2Time" activeColor="#007aff" block-size="20"></slider>
+          <view class="slider-labels">
+            <text>晨</text><text>上午</text><text>午</text><text>下午</text><text>暮</text><text>夜</text><text>深夜</text>
+          </view>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">气温调节: {{v2Temp}}°C</view>
+          <slider min="-15" max="45" value="{{v2Temp}}" show-value bindchange="changeV2Temp" activeColor="#007aff" block-size="20"></slider>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">高品质主题色预设 (可选项)</view>
+          <scroll-view scroll-x class="drawer-theme-tabs-v2" enable-flex="true">
+            <view
+              wx:for="{{themesList}}"
+              wx:key="id"
+              class="drawer-theme-tab-btn-v2 {{v2Theme === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              catchtap="selectV2Theme"
+            >{{item.label}}</view>
+          </scroll-view>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">主天气条件</view>
+          <view class="condition-grid-v2">
+            <view
+              wx:for="{{mainConditions}}"
+              wx:key="id"
+              class="condition-btn-v2 {{v2Condition === item.id ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              catchtap="selectV2Condition"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">天气强度: {{v2Intensity}} 级</view>
+          <slider min="0" max="4" value="{{v2Intensity}}" show-value bindchange="changeV2Intensity" activeColor="#007aff" block-size="20"></slider>
+          <view class="slider-labels">
+            <text>无</text><text>轻微</text><text>中等</text><text>明显</text><text>强烈</text>
+          </view>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">风力等级: {{v2WindLevel}} 级 ({{v2WindLevel <= 1 ? '无风/软风' : v2WindLevel === 2 ? '微风' : v2WindLevel === 3 ? '和风' : v2WindLevel === 4 ? '清风' : v2WindLevel === 5 ? '劲风' : '强风/狂风'}})</view>
+          <slider min="0" max="6" value="{{v2WindLevel}}" show-value bindchange="changeV2WindLevel" activeColor="#007aff" block-size="20"></slider>
+          <view class="slider-labels">
+            <text>无风</text><text>微风</text><text>和风</text><text>清风</text><text>劲风</text><text>强风</text><text>狂风</text>
+          </view>
+        </view>
+
+        <view class="drawer-section">
+          <view class="section-title">修饰因子 (多选)</view>
+          <view class="modifiers-wrap-v2">
+            <view
+              wx:for="{{modifierOptions}}"
+              wx:key="id"
+              class="modifier-chip-v2 {{v2ModifiersMap[item.id] ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              catchtap="toggleV2Modifier"
+            >{{item.label}}</view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="drawer-close-btn" catchtap="submitV2Weather">完成并生成</view>
+    </view>
+  </view>
+</view>

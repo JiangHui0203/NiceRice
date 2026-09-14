@@ -1,0 +1,155 @@
+<view class="page confirm-page" wx:if="{{coupon}}">
+  <view class="page-header">
+    <view class="page-title">确认</view>
+  </view>
+
+  <view class="confirm-hero card">
+    <view class="confirm-type">{{coupon.type}} · {{coupon.people}}</view>
+    <view class="confirm-title">{{coupon.title}}</view>
+    <view class="confirm-meta">{{coupon.venue}} · {{coupon.expiresIn}}</view>
+    <view class="confirm-score">适合度 {{recommendation.score}} · {{recommendation.statusLabel}}</view>
+    <view class="selected-time">
+      <view>
+        <view class="selected-label">推荐时间</view>
+        <view class="selected-date">{{selectedTime.date}}</view>
+      </view>
+      <view class="selected-range">{{selectedTime.range}}</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">时间</view>
+    </view>
+    <view class="time-list">
+      <view
+        wx:for="{{timeOptions}}"
+        wx:key="optionId"
+        class="time-card card {{selectedIndex === index ? 'active' : ''}}"
+        data-index="{{index}}"
+        bindtap="selectTime"
+      >
+        <view class="time-card-header">
+          <view class="time-card-left">
+            <view class="time-badge {{index === 0 ? 'primary' : index === 1 ? 'secondary' : 'neutral'}}">{{item.label}}</view>
+            <view class="time-title">{{item.weekday}} {{item.startTime}}</view>
+          </view>
+          <view class="time-score-box">
+            <text class="time-score-num">{{item.score}}</text>
+            <text class="time-score-percent">%</text>
+            <text class="time-score-label">适合</text>
+          </view>
+        </view>
+        
+        <view class="time-card-body">
+          <view class="time-card-desc">{{item.desc}}</view>
+          <view class="time-card-range">计划时段：{{item.range}}</view>
+        </view>
+        
+        <view class="time-card-warnings" wx:if="{{item.warnings && item.warnings.length}}">
+          <view class="warning-item" wx:for="{{item.warnings}}" wx:for-item="warn" wx:key="*this" catchtap="showNoticeDetail" data-text="{{warn}}">
+            <text class="warning-icon">⚠️</text>
+            <text class="warning-text">{{warn}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 自定义任意时段入口 -->
+    <view class="custom-time-toggle card {{isCustomMode ? 'active' : ''}}" bindtap="toggleCustomMode">
+      <view class="custom-toggle-left">
+        <view class="custom-toggle-icon">⚙️</view>
+        <view class="custom-toggle-info">
+          <view class="custom-toggle-title">自选任意日期与时间</view>
+          <view class="custom-toggle-desc">{{isCustomMode ? (customDate + ' (' + customWeekday + ') ' + customStartTime + '-' + customEndTime) : '点此指定具体出行时分'}}</view>
+        </view>
+      </view>
+      <view class="custom-toggle-action">{{isCustomMode ? '使用推荐' : '自由定制'}}</view>
+    </view>
+
+    <!-- 自定义时间挑选器与即时评估 -->
+    <view class="custom-time-picker-panel card" wx:if="{{isCustomMode}}">
+      <view class="custom-picker-row">
+        <view class="picker-label">出行日期</view>
+        <picker mode="date" value="{{customDate}}" bindchange="onCustomDateChange">
+          <view class="picker-val-chip">{{customDate}} ({{customWeekday}}) ▾</view>
+        </picker>
+      </view>
+      <view class="custom-picker-row">
+        <view class="picker-label">出发时间</view>
+        <picker mode="time" value="{{customStartTime}}" bindchange="onCustomStartTimeChange">
+          <view class="picker-val-chip">{{customStartTime}} ▾</view>
+        </picker>
+      </view>
+      <view class="custom-eval-box" wx:if="{{customSlot}}">
+        <view class="eval-top">
+          <view class="eval-tag">{{customSlot.weatherTag}}</view>
+          <view class="eval-score">适合度 {{customSlot.score}}%</view>
+        </view>
+        <view class="eval-desc">{{customSlot.desc}}</view>
+        <view class="eval-warnings" wx:if="{{customSlot.warnings && customSlot.warnings.length}}">
+          <view class="eval-warn" wx:for="{{customSlot.warnings}}" wx:key="*this">⚠️ {{item}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">信息</view>
+    </view>
+    <view class="info-card card">
+      <view class="info-row">
+        <view class="info-label">参与人</view>
+        <view class="info-value">
+          <picker wx:if="{{coupon.people !== '1人' && friends.length}}" bindchange="onFriendChange" value="{{selectedFriendIndex}}" range="{{friends}}" range-key="name">
+            <view class="picker-value-link">{{partnerText}} ▾</view>
+          </picker>
+          <text wx:else>{{partnerText}}</text>
+        </view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">忌口</view>
+        <view class="info-value">{{friendRestrictionText}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">地点</view>
+        <view class="info-value">{{coupon.address}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">预约</view>
+        <view class="info-value">{{reservationText}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">规则</view>
+        <view class="info-value">{{coupon.usageRules.notes || '使用规则待补充'}}</view>
+      </view>
+      <view class="info-row" wx:if="{{coupon.people !== '1人' && selectedFriend}}">
+        <view class="info-label">路程</view>
+        <view class="info-value">你 {{coupon.travelTime}} · {{selectedFriend.name}} {{friendTravelTime}}</view>
+      </view>
+      <view class="info-row" wx:else>
+        <view class="info-label">路程</view>
+        <view class="info-value">你 {{coupon.travelTime}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">天气</view>
+        <view class="info-value">{{weather.title}}，{{weather.tips[0]}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">提醒</view>
+    </view>
+    <view class="reminder-card card">
+      <view class="reminder-row" wx:for="{{reminders}}" wx:key="*this">{{item}}</view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="btn btn-primary action-main" bindtap="confirmPlan">确认加入</button>
+    <button class="btn btn-secondary action-sub" bindtap="inviteFriend">邀请朋友</button>
+  </view>
+</view>

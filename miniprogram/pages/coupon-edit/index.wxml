@@ -1,0 +1,315 @@
+<view class="page edit-page">
+  <view class="page-header">
+    <view class="eyebrow">先记关键</view>
+    <view class="page-title">{{pageTitle}}</view>
+    <view class="page-subtitle">{{pageSubtitle}}</view>
+  </view>
+
+  <!-- 顶部：智能识别与券面原图截图 (截图提前与粘贴识别合并，极致节省空间) -->
+  <view class="section smart-entry-section">
+    <!-- 未编辑状态下的快捷操作入口 -->
+    <view class="entry-grid" wx:if="{{!isEditing}}">
+      <button class="entry-card card" bindtap="fillSample">
+        <view class="entry-title">✍️ 填入示例</view>
+        <view class="entry-desc">快速预览效果</view>
+      </button>
+      <button class="entry-card card" bindtap="pasteFromClipboard">
+        <view class="entry-title">📋 粘贴识别</view>
+        <view class="entry-desc">剪贴板一键提取</view>
+      </button>
+      <button class="entry-card card" bindtap="recognizeScreenshot" loading="{{ocrRecognizing}}" disabled="{{ocrRecognizing}}">
+        <view class="entry-title">📸 截图识图</view>
+        <view class="entry-desc">{{ocrRecognizing ? '正在识别' : '选图 OCR 解析'}}</view>
+      </button>
+    </view>
+
+    <!-- 文本解析与截图合流工作区卡片 -->
+    <view class="smart-import-card card">
+      <!-- 智能文本解析框 (仅在添加新券且展开或有内容时展示) -->
+      <view class="smart-parse-box" wx:if="{{!isEditing}}">
+        <view class="smart-parse-header">
+          <text class="smart-parse-title">智能文本粘贴解析</text>
+          <text class="smart-parse-hint">粘贴美团/点评文字自动填充</text>
+        </view>
+        <textarea
+          class="smart-parse-input"
+          placeholder="在此处粘贴任意优惠券文字（包含店名、截止日期、价格或规则），点击识别自动填充下方表单..."
+          value="{{pasteInputText}}"
+          bindinput="onPasteInput"
+          maxlength="1000"
+        />
+        <view class="smart-parse-actions" wx:if="{{pasteInputText}}">
+          <button class="btn btn-secondary parse-btn" bindtap="smartParseText">⚡ 识别并填充</button>
+          <button class="btn btn-ghost clear-btn" bindtap="clearPasteInput">清空</button>
+        </view>
+      </view>
+
+      <!-- 券面原图截图预览与上传网格 (与粘贴识别紧邻，共享顶部空间) -->
+      <view class="screenshot-strip-wrap {{!isEditing ? 'with-top-border' : ''}}">
+        <view class="screenshot-strip-header">
+          <view class="strip-header-left">
+            <text class="strip-icon">🖼️</text>
+            <text class="strip-label">券面原图截图</text>
+          </view>
+          <text class="strip-counter">{{form.screenshots.length || 0}}/6 张</text>
+        </view>
+
+        <view class="screenshot-grid">
+          <view
+            class="screenshot-thumb"
+            wx:for="{{form.screenshots}}"
+            wx:key="id"
+            data-index="{{index}}"
+            bindtap="previewScreenshot"
+          >
+            <image class="screenshot-img" src="{{item.previewUrl}}" mode="aspectFill" lazy-load="true" />
+            <button class="screenshot-remove" data-index="{{index}}" catchtap="removeScreenshot">✕</button>
+          </view>
+          <button
+            class="screenshot-add"
+            bindtap="addScreenshot"
+            loading="{{screenshotUploading}}"
+            disabled="{{screenshotUploading || form.screenshots.length >= 6}}"
+            wx:if="{{form.screenshots.length < 6}}"
+          >
+            <view class="screenshot-add-icon">📷</view>
+            <view class="screenshot-add-main">上传原图</view>
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 1. 核心基本信息 (Basic Info) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">🎟️ 核心基本信息</view>
+      <view class="section-action" style="font-size: 22rpx; color: var(--primary-color);">必填项</view>
+    </view>
+    <view class="form-card card">
+      <view class="form-row">
+        <view class="form-label">券名称</view>
+        <input class="form-input" placeholder="例如 涮羊肉双人套餐" value="{{form.title}}" data-field="title" bindinput="onInput" maxlength="120" />
+      </view>
+      <view class="form-row">
+        <view class="form-label">店名</view>
+        <input class="form-input" placeholder="例如 青禾铜锅(望京店)" value="{{form.venue}}" data-field="venue" bindinput="onInput" maxlength="120" />
+      </view>
+      <view class="form-row">
+        <view class="form-label">平台</view>
+        <picker class="form-picker" mode="selector" range="{{platformOptions}}" value="{{platformIndex}}" bindchange="onPlatformChange">
+          <view class="picker-value">{{form.platform}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="form-label">类型</view>
+        <picker class="form-picker" mode="selector" range="{{typeOptions}}" value="{{typeIndex}}" bindchange="onTypeChange">
+          <view class="picker-value">{{form.type}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="form-label">人数规格</view>
+        <picker class="form-picker" mode="selector" range="{{peopleOptions}}" value="{{peopleIndex}}" bindchange="onPeopleChange">
+          <view class="picker-value">{{form.people}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="form-label">购买价</view>
+        <input class="form-input" type="digit" placeholder="实付金额 ¥" value="{{form.price}}" data-field="price" bindinput="onInput" maxlength="32" />
+      </view>
+      <view class="form-row">
+        <view class="form-label">原价</view>
+        <input class="form-input" type="digit" placeholder="门市价/原价 ¥" value="{{form.originalPrice}}" data-field="originalPrice" bindinput="onInput" maxlength="32" />
+      </view>
+      <view class="form-row discount-preview-row" wx:if="{{discountInfo}}">
+        <view class="form-label">优惠</view>
+        <view class="discount-calc-badge">✨ {{discountInfo.text}}</view>
+      </view>
+      <view class="form-row">
+        <view class="form-label">截止日期</view>
+        <picker class="form-picker" mode="date" value="{{form.expireDate}}" bindchange="onExpireChange">
+          <view class="picker-value">{{form.expireDate}}</view>
+        </picker>
+      </view>
+      <view class="form-row date-shortcuts-row">
+        <view class="form-label">快捷到期</view>
+        <view class="date-shortcut-chips">
+          <view class="shortcut-chip" bindtap="applyQuickDate" data-days="7">+7天</view>
+          <view class="shortcut-chip" bindtap="applyQuickDate" data-days="15">+15天</view>
+          <view class="shortcut-chip" bindtap="applyQuickDate" data-days="30">+30天</view>
+          <view class="shortcut-chip" bindtap="applyQuickDate" data-type="end_of_month">本月末</view>
+          <view class="shortcut-chip" bindtap="applyQuickDate" data-type="end_of_year">今年底</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 2. 套餐包含明细 (Dishes & Items) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">🍽️ 套餐包含明细</view>
+      <view class="section-action" wx:if="{{parsedDishes.length}}">已识别 {{parsedDishes.length}} 项</view>
+    </view>
+    <view class="form-card card">
+      <textarea
+        class="form-textarea dishes-textarea"
+        placeholder="输入或粘贴菜品明细，每行一项或用顿号/逗号分隔&#10;例如：&#10;手切鲜羊肉 1盘&#10;精品肥牛 1盘&#10;蔬菜拼盘 1份&#10;特色麻酱小料 2位"
+        value="{{form.dishes}}"
+        data-field="dishes"
+        bindinput="onInput"
+        maxlength="1000"
+        auto-height="true"
+      />
+      <!-- 实时解析预览效果 -->
+      <view class="dishes-preview-wrap" wx:if="{{parsedDishes.length}}">
+        <view class="dishes-preview-title">详情页展示效果：</view>
+        <view class="dishes-preview-chips">
+          <view class="preview-chip" wx:for="{{parsedDishes}}" wx:key="id">
+            <view class="chip-dot"></view>
+            <text class="chip-name">{{item.name}}</text>
+            <text class="chip-count" wx:if="{{item.count}}">{{item.count}}</text>
+          </view>
+        </view>
+      </view>
+      <!-- 快捷添加胶囊 -->
+      <view class="quick-pills-row">
+        <view class="quick-pills-label">快捷添加：</view>
+        <scroll-view class="quick-pills-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="quick-pill-item" wx:for="{{dishPresetPills}}" wx:key="label" data-text="{{item.text}}" bindtap="appendDishPill">
+            <text class="quick-pill-text">+ {{item.text}}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 3. 生活偏好与快捷标签 (Tags & Preferences - 顺序提前) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">🏷️ 生活偏好与标签</view>
+      <view class="section-action" style="font-size: 22rpx; color: var(--text-muted);">影响 AI 推荐权重</view>
+    </view>
+    <view class="form-card card tag-form-card">
+      <view class="tag-preview">
+        <view class="tag-helper">系统会根据类型智能预选，你也可以自由调整：</view>
+        <view class="life-tag-list">
+          <view
+            wx:for="{{lifeTagOptions}}"
+            wx:key="label"
+            class="life-chip {{item.selected ? 'active' : ''}}"
+            data-label="{{item.label}}"
+            bindtap="toggleTag"
+          >{{item.label}}</view>
+        </view>
+      </view>
+      <!-- 自定义标签输入 -->
+      <view class="custom-tag-row">
+        <input class="custom-tag-input" placeholder="自定义标签，如：要排队、适合顺路、朋友不爱辣" value="{{customTag}}" bindinput="onCustomTagInput" maxlength="48" />
+        <button class="custom-tag-btn" bindtap="addCustomTag">添加</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 4. 地点与路程 (Location & Route) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">📍 地点与路程</view>
+    </view>
+    <view class="form-card card">
+      <view class="location-panel">
+        <view class="location-main">
+          <view class="location-title">地图定位点</view>
+          <view class="location-desc">{{locationSummary}}</view>
+        </view>
+        <view class="location-side">
+          <view class="location-badge">{{locationBadge}}</view>
+          <button class="location-btn" bindtap="chooseLocation">地图选点</button>
+        </view>
+      </view>
+      <view class="form-row">
+        <view class="form-label">详细地址</view>
+        <input class="form-input" placeholder="例如 望京SOHO地下1层" value="{{form.address}}" data-field="address" bindinput="onInput" maxlength="500" />
+      </view>
+      <view class="form-row route-row">
+        <view class="form-label">单程路程</view>
+        <input class="form-input route-input" placeholder="例如 28分钟" value="{{form.travelTime}}" data-field="travelTime" bindinput="onInput" maxlength="80" />
+        <button class="route-estimate-btn" bindtap="estimateRoute" loading="{{routeEstimating}}" disabled="{{routeEstimating}}">自动估算</button>
+      </view>
+      <view class="route-origin-row">
+        <view class="form-label">常用起点</view>
+        <view class="route-origin-desc">{{routeOrigin.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 5. 使用规则与服务保障 (Rules & Guarantees - 倒数第二项) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">📋 使用规则与服务保障</view>
+      <view class="section-action" style="font-size: 22rpx; color: var(--text-muted);">履约依据</view>
+    </view>
+    <view class="form-card card">
+      <view class="form-row">
+        <view class="form-label">可用时段</view>
+        <input class="form-input" placeholder="例如 17:00-22:00 或 营业时段通用" value="{{form.usableTime}}" data-field="usableTime" bindinput="onInput" maxlength="160" />
+      </view>
+      <view class="form-row">
+        <view class="form-label">预约要求</view>
+        <picker class="form-picker" mode="selector" range="{{reservationOptions}}" value="{{reservationIndex}}" bindchange="onReservationChange">
+          <view class="picker-value">{{reservationOptions[reservationIndex]}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="form-label">售后保障</view>
+        <picker class="form-picker" mode="selector" range="{{refundOptions}}" value="{{refundIndex}}" bindchange="onRefundChange">
+          <view class="picker-value">{{refundOptions[refundIndex]}}</view>
+        </picker>
+      </view>
+      <view class="form-row" wx:if="{{form.refundType === 'non_refundable' || form.refundType === 'partial'}}">
+        <view class="form-label">预计损失</view>
+        <input class="form-input" type="digit" placeholder="过期预计损失金额 ¥" value="{{form.lossAmount}}" data-field="lossAmount" bindinput="onInput" maxlength="32" />
+      </view>
+      <view class="form-row">
+        <view class="form-label">适用门店</view>
+        <input class="form-input" placeholder="例如 望京店通用、除特殊景区店" value="{{form.storeLimit}}" data-field="storeLimit" bindinput="onInput" maxlength="500" />
+      </view>
+      <view class="form-row note-row">
+        <view class="form-label">补充规则</view>
+        <textarea class="form-textarea" placeholder="例如 不与其他优惠同享、限堂食使用" value="{{form.ruleNotes}}" data-field="ruleNotes" bindinput="onInput" maxlength="1000" auto-height="true" />
+      </view>
+      <!-- 规则快捷点选胶囊 -->
+      <view class="quick-pills-row">
+        <view class="quick-pills-label">常用规则：</view>
+        <scroll-view class="quick-pills-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="quick-pill-item rule-pill" wx:for="{{rulePresetPills}}" wx:key="*this" data-text="{{item}}" bindtap="appendRulePill">
+            <text class="quick-pill-text">+ {{item}}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 6. 个人备注与备忘 (User Personal Notes - 最后一项) -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">📝 个人备注与备忘</view>
+      <view class="section-action" style="font-size: 22rpx; color: var(--text-muted);">选填 · 独家备忘</view>
+    </view>
+    <view class="form-card card">
+      <textarea
+        class="form-textarea user-note-textarea"
+        placeholder="记录个人的私人备忘与提醒，例如：&#10;· 朋友推荐必点黑猪五花，南瓜粥可无限续&#10;· 小王不吃辣，记得点鸳鸯锅&#10;· 靠窗景观位需提前电话预留"
+        value="{{form.note}}"
+        data-field="note"
+        bindinput="onInput"
+        maxlength="500"
+        auto-height="true"
+      />
+    </view>
+  </view>
+
+  <!-- 底部吸底操作栏 (水平居中 & 适配安全区) -->
+  <view class="bottom-bar">
+    <button class="btn btn-primary save-btn" bindtap="save">{{isEditing ? '保存修改' : '保存到券包'}}</button>
+  </view>
+</view>

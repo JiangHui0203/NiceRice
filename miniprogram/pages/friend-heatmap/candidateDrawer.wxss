@@ -1,0 +1,262 @@
+/* 约局候选方案抽屉样式 */
+.candidate-section-title {
+  font-size: 24rpx;
+  font-weight: 850;
+  color: #1e293b;
+  margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.candidate-section-sub {
+  font-size: 20rpx;
+  color: #94a3b8;
+  font-weight: normal;
+}
+
+.empty-candidate-tip {
+  font-size: 21rpx;
+  color: #94a3b8;
+  background: #f8fafc;
+  padding: 20rpx;
+  border-radius: 14rpx;
+  text-align: center;
+  margin-bottom: 14rpx;
+}
+
+/* 自定义候选输入栏 */
+.custom-candidate-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.custom-candidate-input {
+  flex: 1;
+  height: 72rpx;
+  background: #f8fafc;
+  border: 1rpx solid rgba(0, 0, 0, 0.08);
+  border-radius: 16rpx;
+  padding: 0 20rpx;
+  font-size: 24rpx;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.custom-candidate-add-btn {
+  height: 72rpx !important;
+  line-height: 72rpx !important;
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  font-size: 23rpx !important;
+  font-weight: 850 !important;
+  border-radius: 16rpx !important;
+  padding: 0 24rpx !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+.custom-candidate-add-btn:active {
+  background: #0b7a70 !important;
+  transform: scale(0.96);
+}
+
+/* 快捷候选标签 */
+.quick-candidate-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 20rpx;
+  padding-bottom: 4rpx;
+}
+
+.quick-candidate-tag {
+  font-size: 20rpx;
+  color: #0d9488;
+  font-weight: 750;
+  background: rgba(13, 148, 136, 0.06);
+  border: 1rpx solid rgba(13, 148, 136, 0.15);
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+}
+
+.quick-candidate-tag:active {
+  background: rgba(13, 148, 136, 0.16);
+  transform: scale(0.95);
+}
+
+/* 候选卡片列表 */
+.candidate-coupon-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
+  background: #f8fafc;
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  border-radius: 22rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 16rpx;
+  transition: all 0.2s ease;
+}
+
+.candidate-coupon-card.selected {
+  background: rgba(13, 148, 136, 0.04);
+  border-color: #0d9488;
+}
+
+.candidate-coupon-card.custom-item {
+  background: #ffffff;
+  border: 1rpx solid rgba(0, 0, 0, 0.08);
+}
+
+.candidate-coupon-card.custom-item.selected {
+  background: rgba(13, 148, 136, 0.04);
+  border-color: #0d9488;
+}
+
+.candidate-select-check {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid #cbd5e1;
+  margin-top: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.candidate-select-check.checked {
+  background: #0d9488;
+  border-color: #0d9488;
+}
+
+.candidate-select-check.checked::after {
+  content: "✓";
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.candidate-badge-pill {
+  font-size: 20rpx;
+  font-weight: 850;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.1);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.candidate-badge-pill.custom-badge {
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.candidate-coupon-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-coupon-title {
+  font-size: 25rpx;
+  font-weight: 850;
+  color: #1e293b;
+  line-height: 1.3;
+  margin-bottom: 4rpx;
+}
+
+.candidate-coupon-venue {
+  font-size: 20rpx;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+
+.candidate-coupon-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.candidate-price {
+  font-size: 23rpx;
+  font-weight: 850;
+  color: #0d9488;
+}
+
+.candidate-orig-price {
+  font-size: 18rpx;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.candidate-expire {
+  font-size: 19rpx;
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.candidate-dishes-text {
+  font-size: 20rpx;
+  color: #475569;
+  font-weight: 600;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.custom-candidate-delete {
+  font-size: 22rpx;
+  color: #94a3b8;
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.custom-candidate-delete:active {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.candidate-drawer-footer {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.candidate-footer-btn {
+  flex: 1;
+  height: 76rpx !important;
+  border-radius: 38rpx !important;
+  font-size: 23rpx !important;
+  font-weight: 850 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.candidate-footer-btn.secondary {
+  background: rgba(13, 148, 136, 0.08) !important;
+  color: #0d9488 !important;
+  border: 1rpx solid rgba(13, 148, 136, 0.2) !important;
+}
+
+.candidate-footer-btn.primary {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4rpx 14rpx rgba(13, 148, 136, 0.22) !important;
+  border: none !important;
+}
+
