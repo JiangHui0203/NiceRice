@@ -14,6 +14,36 @@ NiceRice 想做的事情很简单：
 
 ---
 
+## Engineering snapshot · 工程速览
+
+从工程角度看，NiceRice 不是单页 Demo，而是一个持续完善的 **Local-first 微信小程序 MVP**。当前设计重点包括：
+
+- **Domain modeling**：Coupon → Recommendation → Plan → History / Feedback；
+- **Multi-constraint recommendation**：结合时间、期限、距离、天气、偏好、已有计划与朋友空闲；
+- **Local-first architecture**：核心状态和决策闭环优先在本地完成；
+- **Service abstraction**：Weather / Route / OCR / Invite / Notification 与核心业务逻辑解耦；
+- **Optional cloud enhancement**：需要外部能力时通过微信云函数和第三方服务增强，而不是让云端成为核心流程前提；
+- **Product reliability**：单独维护 architecture、production-readiness audit、开发验证清单与外部 API 接入路线。
+
+核心结构：
+
+```text
+Pages / Interaction
+        ↓
+Domain & Decision Layer
+        ↓
+Local Stores / Privacy Boundary
+        ↓
+Service Abstraction
+        ↓
+Optional Cloud Enhancement
+```
+
+详细设计：[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)  
+工程与上线审计：[`docs/PRODUCTION_READINESS_AUDIT.md`](docs/PRODUCTION_READINESS_AUDIT.md)
+
+---
+
 ## 有时，好饭
 
 一张餐券，对 NiceRice 来说并不只是一个消费凭证。
